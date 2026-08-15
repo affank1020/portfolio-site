@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a creative portfolio template built with Next.js App Router and a Contentful-backed work/resources section.
 
 ## Getting Started
 
@@ -17,6 +17,17 @@ bun dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+## Contentful Setup
+
+The resources section reads from Contentful when these environment variables are present:
+
+- `CONTENTFUL_SPACE_ID`
+- `CONTENTFUL_DELIVERY_TOKEN`
+- `CONTENTFUL_WORK_CONTENT_TYPE` (defaults to `workItem`)
+- `CONTENTFUL_RESOURCE_CONTENT_TYPE` (defaults to `resource`)
+
+If the values are missing, the site automatically falls back to included starter resources so the template still works out of the box.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
