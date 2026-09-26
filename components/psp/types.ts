@@ -1,0 +1,38 @@
+import type { ComponentType } from "react";
+
+export interface XmbItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  tags?: string[];
+  href?: string | null;
+  note?: string;
+  customContent?: React.ReactNode;
+}
+
+export interface XmbCategory {
+  id: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  items: XmbItem[];
+}
+
+export interface XmbLayoutConfig {
+  /** Crosshair X position as percentage of screen width (e.g. 0.24 = 24%) */
+  crossX: number;
+  /** Crosshair Y position as percentage of screen height (e.g. 0.28 = 28%) */
+  crossY: number;
+  /** Horizontal gap between category icons (px) */
+  hGap: number;
+  /** Vertical gap between sub-items (px) */
+  vGap: number;
+  /** Gap clearance ABOVE crosshair for items scrolling up */
+  aboveClear: number;
+  /** Gap clearance BELOW crosshair for active item & items below */
+  belowClear: number;
+  /** Active category icon size (px) */
+  iconActiveSize: number;
+  /** Inactive category icon size (px) */
+  iconInactiveSize: number;
+}

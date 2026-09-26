@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { ThemeName } from "@/lib/theme";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import type { UiMode } from "@/components/portfolio-page";
 
 interface SiteHeaderProps {
   activeSection: string;
-  themeName: ThemeName;
-  setThemeName: React.Dispatch<React.SetStateAction<ThemeName>>;
+  uiMode: UiMode;
+  toggleUiMode: () => void;
   accentColor: string;
 }
 
-export function SiteHeader({ activeSection, themeName, setThemeName, accentColor }: SiteHeaderProps) {
+export function SiteHeader({ activeSection, uiMode, toggleUiMode, accentColor }: SiteHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -46,7 +45,20 @@ export function SiteHeader({ activeSection, themeName, setThemeName, accentColor
             })}
           </div>
           
-          <ThemeToggle themeName={themeName} onToggle={() => setThemeName((current) => (current === "light" ? "dark" : "light"))} />
+          <button 
+            onClick={toggleUiMode}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-foreground/5 hover:bg-foreground/10 transition-colors text-foreground/70"
+            title="Toggle PSP UI"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <circle cx="18" cy="12" r="1" />
+              <circle cx="15" cy="15" r="1" />
+              <circle cx="15" cy="9" r="1" />
+              <path d="M6 12h4" />
+              <path d="M8 10v4" />
+            </svg>
+          </button>
 
           {/* Mobile Menu Toggle */}
           <button 

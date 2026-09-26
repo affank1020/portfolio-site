@@ -1,4 +1,4 @@
-This is a creative portfolio template built with Next.js App Router and a Contentful-backed work/resources section.
+This is a template built with Next.js App Router and a Contentful-backed work/resources section.
 
 ## Getting Started
 

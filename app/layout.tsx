@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Affan Khan | Portfolio",
-  description: "A creative portfolio template with a Contentful-backed resources layer.",
+  description: "A template with a Contentful-backed resources layer.",
 };
 
 export default function RootLayout({

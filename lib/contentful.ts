@@ -57,7 +57,7 @@ type CollectionOptions = {
 const fallbackHero: PortfolioHero = {
   firstName: "Affan",
   lastName: "Khan.",
-  tagline: "Creative portfolio",
+  tagline: "",
   description: "I build digital experiences with a strong point of view, then connect the content layer so the site stays alive.",
 };
 
