@@ -1,6 +1,10 @@
 "use client";
 
 import type { XmbCategory } from "./types";
+import { MarkdownText } from "./markdown-text";
+import { HorizontalScrollFade } from "./horizontal-scroll-fade";
+import { PspMobileSettings } from "./psp-mobile-settings";
+import { PspMobileContact } from "./psp-mobile-contact";
 
 interface PspMobileViewProps {
   categories: XmbCategory[];
@@ -35,80 +39,105 @@ export function PspMobileView({
         <div className="psp-wave psp-wave-b" />
       </div>
 
-      <header className="relative z-10 flex items-center justify-between border-b border-white/10 pb-5">
+      <header className="relative z-10 border-b border-white/10 pb-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--psp-accent)]">AK / Portfolio</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight">{name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{name}</h1>
           <p className="mt-1 text-sm text-white/55">{tagline}</p>
-        </div>
-        <div className="h-2 w-8 rounded-sm border border-white/40 p-px" aria-label="Decorative battery indicator">
-          <div className="h-full w-3/4 rounded-sm bg-[var(--psp-accent)]" />
         </div>
       </header>
 
-      <nav className={`relative z-10 -mx-5 mt-6 flex snap-x gap-3 px-5 pb-3 ${navigationLocked ? "overflow-x-hidden" : "overflow-x-auto"}`} aria-label="Portfolio sections">
-        {categories.map((cat, index) => {
-          const Icon = cat.icon;
-          const active = index === activeCategoryIndex;
-          return (
-            <button
-              type="button"
-              key={cat.id}
-              onClick={() => onCategorySelect(index)}
-              disabled={navigationLocked}
-              aria-current={active ? "page" : undefined}
-              className={`flex min-w-[92px] snap-start flex-col items-center gap-2 rounded-2xl border px-3 py-4 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] ${
-                active
-                  ? "border-[var(--psp-accent)] bg-white/10 text-white"
-                  : "border-white/10 bg-black/15 text-white/40"
-              }`}
-            >
-              <Icon className="h-7 w-7" />
-              <span className="text-xs font-semibold tracking-wide">{cat.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      <main className="relative z-10 mt-7">
-        <p className="text-xs uppercase tracking-[0.22em] text-white/40">{category.label}</p>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-3" role="list" aria-label={`${category.label} items`}>
-          {category.items.map((categoryItem, index) => {
-            const active = index === activeItemIndex;
+      <nav className="relative z-10 -mx-5 mt-6" aria-label="Portfolio sections">
+        <HorizontalScrollFade
+          disabled={navigationLocked}
+          viewportClassName="scroll-px-5"
+          contentClassName="flex gap-3 px-5 pb-3"
+          resetKey="portfolio-sections"
+        >
+          {categories.map((cat, index) => {
+            const Icon = cat.icon;
+            const active = index === activeCategoryIndex;
             return (
               <button
                 type="button"
-                role="listitem"
-                key={categoryItem.id}
-                onClick={() => active ? onItemActivate(index) : onItemSelect(index)}
-                className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] ${
+                key={cat.id}
+                onClick={() => onCategorySelect(index)}
+                disabled={navigationLocked}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-w-[92px] snap-start flex-col items-center gap-2 rounded-2xl border px-3 py-4 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] ${
                   active
-                    ? "border-white/50 bg-white text-black"
-                    : "border-white/10 bg-white/5 text-white/55"
+                    ? "border-[var(--psp-accent)] bg-white/10 text-white"
+                    : "border-white/10 bg-black/15 text-white/40"
                 }`}
               >
-                {categoryItem.image && (
-                  <span
-                    aria-hidden="true"
-                    className="h-6 w-7 bg-contain bg-center bg-no-repeat drop-shadow-sm"
-                    style={{ backgroundImage: `url(${categoryItem.image})` }}
-                  />
-                )}
-                {categoryItem.title}
+                <Icon className="h-7 w-7" />
+                <span className="text-xs font-semibold tracking-wide">{cat.label}</span>
               </button>
             );
           })}
-        </div>
+        </HorizontalScrollFade>
+      </nav>
 
-        {item && (
-          <section className="mt-5 rounded-3xl border border-white/12 bg-[var(--psp-panel)] p-6 shadow-2xl backdrop-blur-xl" aria-live="polite">
+      <main className="relative z-10 mt-7">
+        {category.id === "settings" ? (
+          <PspMobileSettings category={category} onActivate={onItemActivate} />
+        ) : category.id === "contact" ? (
+          <PspMobileContact category={category} onActivate={onItemActivate} />
+        ) : (
+          <>
+            <p className="text-xs uppercase tracking-[0.22em] text-white/40">{category.label}</p>
+            <HorizontalScrollFade
+              className="mt-3"
+              contentClassName="flex gap-2 pb-3"
+              role="list"
+              ariaLabel={`${category.label} items`}
+              resetKey={category.id}
+            >
+              {category.items.map((categoryItem, index) => {
+                const active = index === activeItemIndex;
+                return (
+                  <button
+                    type="button"
+                    role="listitem"
+                    key={categoryItem.id}
+                    onClick={() => active ? onItemActivate(index) : onItemSelect(index)}
+                    className={`inline-flex shrink-0 snap-start items-center gap-2 rounded-full border px-4 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] ${
+                      active
+                        ? "border-white/50 bg-white text-black"
+                        : "border-white/10 bg-white/5 text-white/55"
+                    }`}
+                  >
+                    {categoryItem.action === "collection-back" ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+                        <path d="m10 17-5-5 5-5" /><path d="M5 12h14" />
+                      </svg>
+                    ) : categoryItem.kind === "folder" ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+                        <path d="M3 6h6l2 2h10v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                      </svg>
+                    ) : categoryItem.image && (
+                      <span
+                        aria-hidden="true"
+                        className="h-6 w-7 bg-contain bg-center bg-no-repeat drop-shadow-sm"
+                        style={{ backgroundImage: `url(${categoryItem.image})` }}
+                      />
+                    )}
+                    <span style={{ fontFamily: categoryItem.fontFamily }}>{categoryItem.title}</span>
+                  </button>
+                );
+              })}
+            </HorizontalScrollFade>
+          </>
+        )}
+
+        {item && category.id !== "settings" && category.id !== "contact" && (
+          <section className="mt-5 rounded-3xl border border-white/12 bg-[var(--psp-panel)] p-6 shadow-2xl backdrop-blur-xl" aria-live="polite" style={{ fontFamily: item.fontFamily }}>
             {item.eyebrow && (
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--psp-accent)]">{item.eyebrow}</p>
             )}
             <h2 className="mt-1 text-3xl font-bold tracking-tight">{item.title}</h2>
             {item.subtitle && <p className="mt-2 text-sm text-white/60">{item.subtitle}</p>}
             <div className="my-5 h-px bg-white/12" />
-            {item.description && <p className="whitespace-pre-line text-base leading-7 text-white/65">{item.description}</p>}
+            {item.description && <MarkdownText>{item.description}</MarkdownText>}
 
             {item.highlights && item.highlights.length > 0 && (
               <ul className="mt-5 space-y-2 text-sm text-white/60">
@@ -122,18 +151,38 @@ export function PspMobileView({
             )}
 
             {item.tags && item.tags.length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-2">
+              <HorizontalScrollFade
+                className="-mx-6 mt-5"
+                viewportClassName="scroll-px-6"
+                contentClassName="flex gap-2 px-6 pb-1"
+                role="list"
+                ariaLabel={`${item.title} technologies`}
+                resetKey={item.id}
+              >
                 {item.tags.map((tag) => (
-                  <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/55">{tag}</span>
+                  <span role="listitem" key={tag} className="shrink-0 snap-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/55">{tag}</span>
                 ))}
-              </div>
+              </HorizontalScrollFade>
             )}
 
-            {item.activationLabel && (
+            {item.activationLabel && item.href && item.downloadName ? (
+              <a
+                href={item.href}
+                download={item.downloadName}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontFamily: item.fontFamily }}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[var(--psp-accent)] px-4 py-3 text-sm font-bold text-black transition active:scale-[0.99]"
+              >
+                <span aria-hidden="true">↓</span>
+                <span>{item.activationLabel}</span>
+              </a>
+            ) : item.activationLabel && (
               <button
                 type="button"
                 onClick={() => onItemActivate(activeItemIndex)}
                 disabled={item.activationLabel === "Active"}
+                style={{ fontFamily: item.fontFamily }}
                 className="mt-6 w-full rounded-2xl bg-[var(--psp-accent)] px-4 py-3 text-sm font-bold text-black transition active:scale-[0.99] disabled:opacity-50"
               >
                 {item.activationLabel}
@@ -144,7 +193,11 @@ export function PspMobileView({
       </main>
 
       <footer className="relative z-10 mt-12 border-t border-white/10 pt-5 text-center text-[11px] uppercase tracking-[0.2em] text-white/30">
-        Tap a section, then choose an item
+        {category.id === "contact"
+          ? "Choose a channel to get in touch"
+          : category.id === "settings"
+            ? "Preferences are saved on this device"
+            : "Tap a section, then choose an item"}
       </footer>
     </div>
   );

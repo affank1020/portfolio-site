@@ -8,6 +8,7 @@ import type {
   PortfolioContact,
   PortfolioExperience,
   PortfolioPost,
+  PortfolioCollection,
 } from "@/lib/contentful";
 import { DEFAULT_XMB_CONFIG, buildXmbCategories } from "./psp-config";
 import { XmbHeader } from "./xmb-header";
@@ -18,6 +19,8 @@ import { PspMobileView } from "./psp-mobile-view";
 import { XmbExpandedDetail } from "./xmb-expanded-detail";
 import { getPspThemeStyle, isPspThemeName, type PspThemeName } from "./psp-themes";
 import type { XmbItem } from "./types";
+import { XmbSceneLayer } from "./xmb-scene-layer";
+import { PspThemeMotion } from "./psp-theme-motion";
 
 interface PspPortfolioPageProps {
   workItems: PortfolioWork[];
@@ -25,6 +28,7 @@ interface PspPortfolioPageProps {
   contact: PortfolioContact;
   experienceItems: PortfolioExperience[];
   posts: PortfolioPost[];
+  collections: PortfolioCollection[];
   accentColor?: string;
 }
 
@@ -34,10 +38,12 @@ export function PspPortfolioPage({
   contact,
   experienceItems,
   posts,
+  collections,
 }: PspPortfolioPageProps) {
-  const [themeName, setThemeName] = useState<PspThemeName>("midnight");
+  const [themeName, setThemeName] = useState<PspThemeName>("slate");
   const [reduceMotion, setReduceMotion] = useState(false);
   const [settingsView, setSettingsView] = useState<"root" | "theme">("root");
+  const [openCollectionId, setOpenCollectionId] = useState<string | null>(null);
   const [expandedItem, setExpandedItem] = useState<XmbItem | null>(null);
 
   useEffect(() => {
@@ -59,8 +65,10 @@ export function PspPortfolioPage({
       themeName,
       reduceMotion,
       settingsView,
+      collections,
+      openCollectionId,
     }),
-    [hero, workItems, experienceItems, posts, contact, themeName, reduceMotion, settingsView]
+    [hero, workItems, experienceItems, posts, contact, themeName, reduceMotion, settingsView, collections, openCollectionId]
   );
 
   const [activeCategoryIndex, setActiveCategoryIndex] = useState(0);
@@ -74,11 +82,12 @@ export function PspPortfolioPage({
   const categoryItemsLength = activeCategory?.items?.length ?? 0;
 
   const settingsCategoryIndex = categories.findIndex((category) => category.id === "settings");
+  const navigationLocked = settingsView === "theme" || openCollectionId !== null;
 
   const selectCategory = useCallback((index: number) => {
-    if (settingsView === "theme") return;
+    if (navigationLocked) return;
     setActiveCategoryIndex(index);
-  }, [settingsView]);
+  }, [navigationLocked]);
 
   const selectItem = useCallback((index: number) => {
     setActiveItemIndices((previous) => ({ ...previous, [activeCategoryIndex]: index }));
@@ -115,19 +124,41 @@ export function PspPortfolioPage({
       return;
     }
 
+    if (item.action === "open-collection" && item.actionValue) {
+      setOpenCollectionId(item.actionValue);
+      setActiveItemIndices((previous) => ({ ...previous, [activeCategoryIndex]: 1 }));
+      return;
+    }
+
+    if (item.action === "collection-back") {
+      setOpenCollectionId(null);
+      setActiveItemIndices((previous) => ({ ...previous, [activeCategoryIndex]: 0 }));
+      return;
+    }
+
     if (item.detailHref) {
       setExpandedItem(item);
       return;
     }
 
     if (item.href && item.href !== "#") {
+      if (item.downloadName) {
+        const link = document.createElement("a");
+        link.href = item.href;
+        link.download = item.downloadName;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.click();
+        return;
+      }
+
       if (item.href.startsWith("mailto:")) {
         window.location.href = item.href;
       } else {
         window.open(item.href, "_blank", "noopener,noreferrer");
       }
     }
-  }, [settingsCategoryIndex]);
+  }, [activeCategoryIndex, settingsCategoryIndex]);
 
   const activateItemAtIndex = useCallback((index: number) => {
     activateItem(activeCategory?.items[index]);
@@ -147,6 +178,18 @@ export function PspPortfolioPage({
         event.preventDefault();
         setSettingsView("root");
         setActiveItemIndices((previous) => ({ ...previous, [settingsCategoryIndex]: 0 }));
+        return;
+      }
+
+      if ((event.key === "Escape" || event.key === "Backspace" || event.key === "ArrowLeft") && openCollectionId) {
+        event.preventDefault();
+        setOpenCollectionId(null);
+        setActiveItemIndices((previous) => ({ ...previous, [activeCategoryIndex]: 0 }));
+        return;
+      }
+
+      if (openCollectionId && event.key === "ArrowRight") {
+        event.preventDefault();
         return;
       }
 
@@ -187,7 +230,7 @@ export function PspPortfolioPage({
         activateItem(activeItem);
       }
     },
-    [activeCategoryIndex, categoryItemsLength, activeItem, categories.length, activateItem, expandedItem, settingsCategoryIndex, settingsView]
+    [activeCategoryIndex, categoryItemsLength, activeItem, categories.length, activateItem, expandedItem, settingsCategoryIndex, settingsView, openCollectionId]
   );
 
   useEffect(() => {
@@ -209,8 +252,8 @@ export function PspPortfolioPage({
 
   return (
     <MotionConfig reducedMotion={reduceMotion ? "always" : "user"}>
-      <div style={themeStyle} data-reduce-motion={reduceMotion ? "true" : "false"}>
-        <div className="block md:hidden">
+      <div className="psp-theme-root" style={themeStyle} data-psp-theme={themeName} data-reduce-motion={reduceMotion ? "true" : "false"}>
+        <div className="block lg:hidden">
           <PspMobileView
             categories={categories}
             name={`${hero.firstName} ${hero.lastName}`}
@@ -220,15 +263,22 @@ export function PspPortfolioPage({
             onCategorySelect={selectCategory}
             onItemSelect={selectItem}
             onItemActivate={activateItemAtIndex}
-            navigationLocked={settingsView === "theme"}
+            navigationLocked={navigationLocked}
           />
         </div>
 
-        <div className="psp-shell fixed inset-0 z-40 hidden select-none overflow-hidden font-sans text-white md:block">
+        <div className="psp-shell fixed inset-0 z-40 hidden select-none overflow-hidden text-white lg:block">
           <div className="psp-ambient" aria-hidden="true">
             <div className="psp-wave psp-wave-a" />
             <div className="psp-wave psp-wave-b" />
           </div>
+
+          <PspThemeMotion theme={themeName} reduced={reduceMotion} />
+
+          <XmbSceneLayer
+            category={activeCategory}
+            item={activeItem}
+          />
 
           <XmbHeader name={`${hero.firstName} ${hero.lastName}`} />
 
@@ -237,7 +287,7 @@ export function PspPortfolioPage({
             activeCategoryIndex={activeCategoryIndex}
             config={config}
             onCategorySelect={selectCategory}
-            locked={settingsView === "theme"}
+            locked={navigationLocked}
           />
 
           <XmbVerticalAxis
@@ -258,7 +308,7 @@ export function PspPortfolioPage({
           />
 
           <div className="absolute bottom-8 right-8 z-20 flex items-center gap-6 font-mono text-xs uppercase tracking-widest text-white/35">
-            {settingsView === "theme" ? (
+            {navigationLocked ? (
               <>
                 <div className="flex items-center gap-2">
                   <div className="flex gap-0.5">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PortfolioWork, PortfolioHero, PortfolioContact, PortfolioExperience, PortfolioPost } from "@/lib/contentful";
+import type { PortfolioWork, PortfolioHero, PortfolioContact, PortfolioExperience, PortfolioPost, PortfolioCollection } from "@/lib/contentful";
 import { applyThemeVariables, themes } from "@/lib/theme";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 
@@ -16,7 +16,7 @@ import { PspPortfolioPage } from "@/components/psp/psp-portfolio-page";
 
 export type UiMode = "classic" | "psp";
 
-export default function PortfolioPage(props: { workItems: PortfolioWork[]; hero: PortfolioHero; contact: PortfolioContact; experienceItems: PortfolioExperience[]; posts: PortfolioPost[] }) {
+export default function PortfolioPage(props: { workItems: PortfolioWork[]; hero: PortfolioHero; contact: PortfolioContact; experienceItems: PortfolioExperience[]; posts: PortfolioPost[]; collections: PortfolioCollection[] }) {
   const [uiMode, setUiMode] = useState<UiMode>("psp");
 
   useEffect(() => {
@@ -42,7 +42,14 @@ export default function PortfolioPage(props: { workItems: PortfolioWork[]; hero:
       {uiMode === "psp" ? (
         <PspPortfolioPage {...props} accentColor={themes.dark.accent} />
       ) : (
-        <ClassicPortfolioPage {...props} uiMode={uiMode} toggleUiMode={toggleUiMode} />
+        <ClassicPortfolioPage
+          workItems={props.workItems}
+          hero={props.hero}
+          contact={props.contact}
+          experienceItems={props.experienceItems}
+          uiMode={uiMode}
+          toggleUiMode={toggleUiMode}
+        />
       )}
     </>
   );

@@ -10,6 +10,7 @@ export default async function Home() {
       experienceItems={content.experience}
       workItems={content.workItems}
       posts={content.posts}
+      collections={content.collections}
     />
   );
 }

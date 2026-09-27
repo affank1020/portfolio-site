@@ -1,3 +1,11 @@
+import { sortByMostRecentYear } from "./portfolio-sort.ts";
+
+export type PortfolioLink = {
+  label: string;
+  url: string;
+  type?: "website" | "github" | "devpost" | "ios" | "android" | "video" | "other";
+};
+
 export type PortfolioWork = {
   title: string;
   slug: string;
@@ -11,8 +19,10 @@ export type PortfolioWork = {
   href: string;
   repositoryUrl?: string;
   liveUrl?: string;
+  links: PortfolioLink[];
   image?: string;
   gallery?: string[];
+  collectionId?: string;
 };
 
 export type PortfolioExperience = {
@@ -35,6 +45,17 @@ export type PortfolioPost = {
   tags: string[];
   heroImage?: string;
   placeholder?: boolean;
+  collectionId?: string;
+};
+
+export type PortfolioCollection = {
+  id: string;
+  title: string;
+  slug: string;
+  section: "projects" | "blog";
+  description: string;
+  order: number;
+  image?: string;
 };
 
 export type PortfolioHero = {
@@ -42,6 +63,7 @@ export type PortfolioHero = {
   lastName: string;
   tagline: string;
   description: string;
+  cvUrl?: string;
 };
 
 export type PortfolioContact = {
@@ -109,43 +131,16 @@ const fallbackExperience: PortfolioExperience[] = [
   },
 ];
 
-const fallbackWork: PortfolioWork[] = [
-  {
-    year: "2024",
-    title: "Conduit",
-    slug: "conduit",
-    summary: "A zero-dependency pub/sub broker with a single-binary footprint and aggressive throughput goals.",
-    body: "Conduit explores what a compact message broker can look like when deployment simplicity is treated as a core product constraint. The work focuses on protocol design, predictable performance, and an operational model that stays understandable under load.",
-    role: "Independent project",
-    outcomes: ["Single-binary deployment", "Zero runtime dependencies", "Throughput-oriented architecture"],
-    tags: ["Rust", "TCP", "Systems"],
-    note: "open source · 3.2k ★",
-    href: "#",
-    image: "/globe.svg",
-  },
-  {
-    year: "2024",
-    title: "Patchwork",
-    slug: "patchwork",
-    summary: "Schema migration tooling for teams that want safer deploys and fewer surprises in production.",
-    body: "Patchwork is a workflow for planning and applying database changes with more context than a raw migration file can provide. It is designed around reviewability, explicit rollout stages, and safer recovery when production does not behave like a local environment.",
-    role: "Independent project",
-    outcomes: ["Reviewable migration plans", "Safer staged rollouts", "Clearer recovery paths"],
-    tags: ["Go", "PostgreSQL", "gRPC"],
-    note: "used in production at 4 companies",
-    href: "#",
-    image: "/window.svg",
-  },
-];
+const fallbackWork: PortfolioWork[] = [];
 
 const fallbackPosts: PortfolioPost[] = [
   {
     title: "Writing, soon",
     slug: "writing-soon",
     excerpt: "Longer notes on software, product decisions, and the systems behind the work will live here.",
-    body: "This journal is ready for its first entry. Publish a blogPost in Contentful and it will appear here automatically.",
+    body: "This blog is ready for its first entry. Publish a blogPost in Contentful and it will appear here automatically.",
     publishedAt: "Coming soon",
-    tags: ["Journal"],
+    tags: ["Blog"],
     placeholder: true,
   },
 ];
@@ -172,6 +167,44 @@ function stringArrayField(fields: Record<string, unknown> | undefined, key: stri
   if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string");
   if (typeof value === "string") return value.split(",").map(i => i.trim()).filter(Boolean);
   return undefined;
+}
+
+function numberField(fields: Record<string, unknown> | undefined, key: string) {
+  const value = fields?.[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function referenceIdField(fields: Record<string, unknown> | undefined, key: string) {
+  const value = fields?.[key];
+  const sys = isRecord(value) && isRecord(value.sys) ? value.sys : undefined;
+  return typeof sys?.id === "string" ? sys.id : undefined;
+}
+
+function linkArrayField(fields: Record<string, unknown> | undefined, key: string): PortfolioLink[] {
+  const field = fields?.[key];
+  const value = Array.isArray(field)
+    ? field
+    : isRecord(field) && Array.isArray(field.items)
+      ? field.items
+      : [];
+
+  return value.flatMap((item) => {
+    if (!isRecord(item) || typeof item.label !== "string" || typeof item.url !== "string") return [];
+
+    try {
+      const url = new URL(item.url);
+      if (url.protocol !== "https:" && url.protocol !== "http:") return [];
+    } catch {
+      return [];
+    }
+
+    const allowedTypes = ["website", "github", "devpost", "ios", "android", "video", "other"] as const;
+    const type = typeof item.type === "string" && allowedTypes.includes(item.type as (typeof allowedTypes)[number])
+      ? item.type as PortfolioLink["type"]
+      : undefined;
+
+    return [{ label: item.label, url: item.url, type }];
+  });
 }
 
 function richTextField(fields: Record<string, unknown> | undefined, key: string) {
@@ -243,7 +276,7 @@ async function getContentfulData(contentType: string): Promise<ContentfulRespons
   }
 }
 
-function mapHeroEntry(entry: ContentfulEntry): PortfolioHero | null {
+function mapHeroEntry(entry: ContentfulEntry, assets: ContentfulAsset[]): PortfolioHero | null {
   const fields = entry.fields;
   if (!fields) return null;
   return {
@@ -251,6 +284,7 @@ function mapHeroEntry(entry: ContentfulEntry): PortfolioHero | null {
     lastName: stringField(fields, "lastName") ?? fallbackHero.lastName,
     tagline: stringField(fields, "tagline") ?? fallbackHero.tagline,
     description: richTextField(fields, "description") ?? fallbackHero.description,
+    cvUrl: getAssetUrl(fields, "cv", assets) ?? stringField(fields, "cvUrl"),
   };
 }
 
@@ -295,11 +329,13 @@ function mapWorkEntry(entry: ContentfulEntry, assets: ContentfulAsset[]): Portfo
     outcomes: stringArrayField(fields, "outcomes") ?? [],
     tags: stringArrayField(fields, "tags") ?? [],
     note: stringField(fields, "note") ?? "",
-    href: stringField(fields, "href") ?? "#",
+    href: stringField(fields, "url") ?? stringField(fields, "href") ?? "#",
     repositoryUrl: stringField(fields, "repositoryUrl"),
     liveUrl: stringField(fields, "liveUrl"),
+    links: linkArrayField(fields, "links"),
     image: getAssetUrl(fields, "image", assets),
     gallery: getAssetUrls(fields, "gallery", assets),
+    collectionId: referenceIdField(fields, "collection"),
   };
 }
 
@@ -316,24 +352,48 @@ function mapPostEntry(entry: ContentfulEntry, assets: ContentfulAsset[]): Portfo
     publishedAt: stringField(fields, "publishedAt") ?? "",
     tags: stringArrayField(fields, "tags") ?? [],
     heroImage: getAssetUrl(fields, "heroImage", assets),
+    collectionId: referenceIdField(fields, "collection"),
+  };
+}
+
+function mapCollectionEntry(entry: ContentfulEntry, assets: ContentfulAsset[]): PortfolioCollection | null {
+  const fields = entry.fields;
+  const id = entry.sys?.id;
+  const title = stringField(fields, "title");
+  const section = stringField(fields, "section")?.toLowerCase();
+  if (!id || !title || (section !== "projects" && section !== "blog")) return null;
+
+  return {
+    id,
+    title,
+    slug: stringField(fields, "slug") ?? slugify(title),
+    section,
+    description: richTextField(fields, "description") ?? "",
+    order: numberField(fields, "order") ?? 999,
+    image: getAssetUrl(fields, "image", assets),
   };
 }
 
 export async function getPortfolioContent() {
-  const [heroRes, contactRes, workRes, expRes, postsRes] = await Promise.all([
+  const [heroRes, contactRes, workRes, expRes, postsRes, collectionsRes] = await Promise.all([
     getContentfulData("portfolioHero"),
     getContentfulData("portfolioContact"),
     getContentfulData("workItem"),
     getContentfulData("experienceItem"),
     getContentfulData("blogPost"),
+    getContentfulData("portfolioCollection"),
   ]);
 
-  const heroItem = heroRes?.items?.[0] ? mapHeroEntry(heroRes.items[0]) : null;
+  const heroItem = heroRes?.items?.[0]
+    ? mapHeroEntry(heroRes.items[0], heroRes?.includes?.Asset ?? [])
+    : null;
   const contactItem = contactRes?.items?.[0] ? mapContactEntry(contactRes.items[0]) : null;
   
-  const workItems = (workRes?.items ?? [])
-    .map(entry => mapWorkEntry(entry, workRes?.includes?.Asset ?? []))
-    .filter((item): item is PortfolioWork => Boolean(item));
+  const workItems = sortByMostRecentYear(
+    (workRes?.items ?? [])
+      .map(entry => mapWorkEntry(entry, workRes?.includes?.Asset ?? []))
+      .filter((item): item is PortfolioWork => Boolean(item))
+  );
     
   const experienceItems = (expRes?.items ?? [])
     .map(entry => mapExperienceEntry(entry, expRes?.includes?.Asset ?? []))
@@ -343,12 +403,18 @@ export async function getPortfolioContent() {
     .map(entry => mapPostEntry(entry, postsRes?.includes?.Asset ?? []))
     .filter((item): item is PortfolioPost => Boolean(item));
 
+  const collections = (collectionsRes?.items ?? [])
+    .map(entry => mapCollectionEntry(entry, collectionsRes?.includes?.Asset ?? []))
+    .filter((item): item is PortfolioCollection => Boolean(item))
+    .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+
   return {
     hero: heroItem ?? fallbackHero,
     contact: contactItem ?? fallbackContact,
-    workItems: workItems.length > 0 ? workItems : fallbackWork,
+    workItems,
     experience: experienceItems.length > 0 ? experienceItems : fallbackExperience,
     posts: posts.length > 0 ? posts : fallbackPosts,
+    collections,
   };
 }
 
@@ -359,5 +425,6 @@ export function getFallbackPortfolioContent() {
     workItems: fallbackWork,
     experience: fallbackExperience,
     posts: fallbackPosts,
+    collections: [] as PortfolioCollection[],
   };
 }

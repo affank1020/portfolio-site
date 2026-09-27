@@ -4,16 +4,19 @@ import type {
   PortfolioContact,
   PortfolioExperience,
   PortfolioPost,
+  PortfolioCollection,
 } from "@/lib/contentful";
-import type { XmbCategory, XmbLayoutConfig } from "./types";
+import type { XmbCategory, XmbItem, XmbLayoutConfig } from "./types";
 import {
   HomeIcon,
   ProjectsIcon,
   ExperienceIcon,
   ContactIcon,
-  JournalIcon,
+  BlogIcon,
   SettingsIcon,
 } from "./xmb-icons";
+import { PSP_THEME_NAMES, PSP_THEMES, type PspThemeName } from "./psp-themes";
+import { getCollectionView } from "@/lib/portfolio-collections";
 
 /**
  * Layout dimensions configuration.
@@ -36,9 +39,89 @@ export interface BuildCategoriesInput {
   experienceItems: PortfolioExperience[];
   posts: PortfolioPost[];
   contact: PortfolioContact;
-  themeName: string;
+  themeName: PspThemeName;
   reduceMotion: boolean;
   settingsView: "root" | "theme";
+  collections: PortfolioCollection[];
+  openCollectionId: string | null;
+}
+
+function projectItem(work: PortfolioWork): XmbItem {
+  return {
+    id: `project-${work.slug}`,
+    kind: "project",
+    title: work.title,
+    eyebrow: work.role,
+    subtitle: [work.year, work.note].filter(Boolean).join(" — "),
+    description: work.summary,
+    body: work.body,
+    image: work.image,
+    gallery: work.gallery,
+    highlights: work.outcomes,
+    tags: work.tags,
+    href: work.href,
+    links: work.links,
+    detailHref: `/projects/${work.slug}`,
+    activationLabel: "View more",
+  };
+}
+
+function postItem(post: PortfolioPost): XmbItem {
+  return {
+    id: `post-${post.slug}`,
+    kind: "post",
+    title: post.title,
+    subtitle: post.publishedAt,
+    description: post.excerpt,
+    body: post.body,
+    tags: post.tags,
+    detailHref: post.placeholder ? undefined : `/blog/${post.slug}`,
+    activationLabel: post.placeholder ? undefined : "Read article",
+  };
+}
+
+function collectionItems<T extends { collectionId?: string }>(
+  section: "projects" | "blog",
+  collections: PortfolioCollection[],
+  openCollectionId: string | null,
+  entries: T[],
+  mapEntry: (entry: T) => XmbItem,
+): XmbItem[] {
+  const { openCollection, contained, folders, ungrouped } = getCollectionView(
+    section,
+    collections,
+    openCollectionId,
+    entries,
+  );
+
+  if (openCollection) {
+    return [
+      {
+        id: `collection-back-${openCollection.id}`,
+        kind: "folder",
+        title: `Back to ${section === "projects" ? "Projects" : "Blog"}`,
+        subtitle: openCollection.title,
+        description: openCollection.description,
+        action: "collection-back",
+        activationLabel: "Go back",
+      },
+      ...contained.map(mapEntry),
+    ];
+  }
+
+  const folderItems: XmbItem[] = folders.map(({ collection, count }) => ({
+      id: `collection-${collection.id}`,
+      kind: "folder",
+      title: collection.title,
+      subtitle: `${count} ${section === "projects" ? (count === 1 ? "project" : "projects") : (count === 1 ? "post" : "posts")}`,
+      description: collection.description,
+      image: collection.image,
+      action: "open-collection",
+      actionValue: collection.id,
+      activationLabel: "Open folder",
+  }));
+
+  return [...folderItems, ...ungrouped.map(mapEntry)];
 }
 
 /**
@@ -54,6 +137,8 @@ export function buildXmbCategories({
   themeName,
   reduceMotion,
   settingsView,
+  collections,
+  openCollectionId,
 }: BuildCategoriesInput): XmbCategory[] {
   const themeItems = [
     {
@@ -65,53 +150,21 @@ export function buildXmbCategories({
       action: "settings-back" as const,
       activationLabel: "Go back",
     },
-    {
-      id: "theme-midnight",
+    ...PSP_THEME_NAMES.map((name) => ({
+      id: `theme-${name}`,
       kind: "setting" as const,
-      title: "Midnight",
-      subtitle: themeName === "midnight" ? "Active theme" : "Theme",
-      description: "High-contrast monochrome with a quiet blue signal glow.",
+      title: PSP_THEMES[name].label,
+      subtitle: themeName === name ? "Active theme" : "Theme",
+      description: PSP_THEMES[name].description,
+      fontFamily: PSP_THEMES[name].font,
       action: "theme" as const,
-      actionValue: "midnight",
-      selected: themeName === "midnight",
-      activationLabel: themeName === "midnight" ? "Active" : "Apply theme",
-    },
-    {
-      id: "theme-aurora",
-      kind: "setting" as const,
-      title: "Aurora",
-      subtitle: themeName === "aurora" ? "Active theme" : "Theme",
-      description: "Cool violet and cyan light moving beneath the XMB.",
-      action: "theme" as const,
-      actionValue: "aurora",
-      selected: themeName === "aurora",
-      activationLabel: themeName === "aurora" ? "Active" : "Apply theme",
-    },
-    {
-      id: "theme-ember",
-      kind: "setting" as const,
-      title: "Ember",
-      subtitle: themeName === "ember" ? "Active theme" : "Theme",
-      description: "A warm amber signal over deep charcoal.",
-      action: "theme" as const,
-      actionValue: "ember",
-      selected: themeName === "ember",
-      activationLabel: themeName === "ember" ? "Active" : "Apply theme",
-    },
-    {
-      id: "theme-arctic",
-      kind: "setting" as const,
-      title: "Arctic",
-      subtitle: themeName === "arctic" ? "Active theme" : "Theme",
-      description: "Silver-blue tones inspired by the original system interface.",
-      action: "theme" as const,
-      actionValue: "arctic",
-      selected: themeName === "arctic",
-      activationLabel: themeName === "arctic" ? "Active" : "Apply theme",
-    },
+      actionValue: name,
+      selected: themeName === name,
+      activationLabel: themeName === name ? "Active" : "Apply theme",
+    })),
   ];
 
-  return [
+  const categories: XmbCategory[] = [
     {
       id: "home",
       label: "Home",
@@ -123,6 +176,9 @@ export function buildXmbCategories({
           title: "About Me",
           // subtitle: `Hi, I’m ${hero.firstName} ${hero.lastName}.`,
           description: hero.description,
+          href: hero.cvUrl,
+          downloadName: hero.cvUrl ? "Affan-Khan-CV.pdf" : undefined,
+          activationLabel: hero.cvUrl ? "Download CV" : undefined,
         },
       ],
     },
@@ -130,20 +186,7 @@ export function buildXmbCategories({
       id: "projects",
       label: "Projects",
       icon: ProjectsIcon,
-      items: workItems.map((w) => ({
-        id: `project-${w.slug}`,
-        kind: "project",
-        title: w.title,
-        eyebrow: w.role,
-        subtitle: `${w.year} — ${w.note}`,
-        description: w.summary,
-        body: w.body,
-        highlights: w.outcomes,
-        tags: w.tags,
-        href: w.href,
-        detailHref: `/projects/${w.slug}`,
-        activationLabel: "View case study",
-      })),
+      items: collectionItems("projects", collections, openCollectionId, workItems, projectItem),
     },
     {
       id: "experience",
@@ -161,20 +204,10 @@ export function buildXmbCategories({
       })),
     },
     {
-      id: "journal",
-      label: "Journal",
-      icon: JournalIcon,
-      items: posts.map((post) => ({
-        id: `post-${post.slug}`,
-        kind: "post",
-        title: post.title,
-        subtitle: post.publishedAt,
-        description: post.excerpt,
-        body: post.body,
-        tags: post.tags,
-        detailHref: post.placeholder ? undefined : `/journal/${post.slug}`,
-        activationLabel: post.placeholder ? undefined : "Read article",
-      })),
+      id: "blog",
+      label: "Blog",
+      icon: BlogIcon,
+      items: collectionItems("blog", collections, openCollectionId, posts, postItem),
     },
     {
       id: "contact",
@@ -216,7 +249,7 @@ export function buildXmbCategories({
           id: "settings-theme",
           kind: "setting",
           title: "Theme",
-          subtitle: themeName.charAt(0).toUpperCase() + themeName.slice(1),
+          subtitle: PSP_THEMES[themeName].label,
           description: "Choose the colour and ambient-light profile for the XMB.",
           action: "settings-theme",
           activationLabel: "Open themes",
@@ -234,4 +267,6 @@ export function buildXmbCategories({
       ],
     },
   ];
+
+  return categories.filter((category) => category.id !== "projects" || category.items.length > 0);
 }

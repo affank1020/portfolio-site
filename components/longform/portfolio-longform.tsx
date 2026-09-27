@@ -28,7 +28,7 @@ export function PortfolioLongform({
 
   return (
     <main
-      style={getPspThemeStyle("midnight")}
+      style={getPspThemeStyle("slate")}
       className="psp-shell relative min-h-screen overflow-hidden bg-[var(--psp-bg)] text-[var(--psp-fg)]"
     >
       <div className="psp-ambient fixed inset-0" aria-hidden="true">

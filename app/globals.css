@@ -35,6 +35,11 @@ body::selection {
   color: var(--foreground);
 }
 
+.psp-theme-root,
+.psp-shell {
+  font-family: var(--psp-font-ui), sans-serif;
+}
+
 .psp-shell {
   background:
     radial-gradient(circle at 76% 18%, color-mix(in srgb, var(--psp-accent) 8%, transparent), transparent 28%),
@@ -73,33 +78,11 @@ body::selection {
 .psp-wave-a {
   bottom: -17%;
   background: var(--psp-wave-a);
-  animation: psp-wave-a 18s ease-in-out infinite alternate;
 }
 
 .psp-wave-b {
   bottom: -26%;
   background: var(--psp-wave-b);
-  animation: psp-wave-b 24s ease-in-out infinite alternate;
-}
-
-@keyframes psp-wave-a {
-  from { transform: translate3d(-4%, 0, 0) rotate(-3deg) scale(1); }
-  to { transform: translate3d(6%, -12%, 0) rotate(4deg) scale(1.08); }
-}
-
-@keyframes psp-wave-b {
-  from { transform: translate3d(7%, -5%, 0) rotate(3deg) scale(1.08); }
-  to { transform: translate3d(-5%, -15%, 0) rotate(-5deg) scale(1); }
-}
-
-[data-reduce-motion="true"] .psp-wave {
-  animation: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .psp-wave {
-    animation: none !important;
-  }
 }
 
 /* The XMB remains fully usable when animation is disabled. */

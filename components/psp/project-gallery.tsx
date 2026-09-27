@@ -1,0 +1,78 @@
+"use client";
+
+import { useState } from "react";
+
+interface ProjectGalleryProps {
+  images: string[];
+  title: string;
+}
+
+export function ProjectGallery({ images, title }: ProjectGalleryProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeImage = images[activeIndex];
+
+  const move = (direction: number) => {
+    setActiveIndex((current) => (current + direction + images.length) % images.length);
+  };
+
+  return (
+    <section className="mt-10" aria-label={`${title} gallery`}>
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/25 shadow-2xl">
+        {/* Contentful asset hosts vary between spaces, so keep this renderer provider-agnostic. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          key={activeImage}
+          src={activeImage}
+          alt={`${title} project view ${activeIndex + 1}`}
+          className="aspect-video w-full object-contain"
+        />
+
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => move(-1)}
+              aria-label="Previous image"
+              className="absolute left-4 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/45 text-xl text-white/80 backdrop-blur-md transition hover:border-white/35 hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)]"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={() => move(1)}
+              aria-label="Next image"
+              className="absolute right-4 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/45 text-xl text-white/80 backdrop-blur-md transition hover:border-white/35 hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)]"
+            >
+              →
+            </button>
+          </>
+        )}
+
+        <div className="absolute bottom-4 right-4 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[10px] tracking-[0.2em] text-white/65 backdrop-blur-md">
+          {String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
+        </div>
+      </div>
+
+      {images.length > 1 && (
+        <div className="mt-3 flex gap-3 overflow-x-auto pb-2" role="list" aria-label="Choose gallery image">
+          {images.map((src, index) => (
+            <button
+              type="button"
+              role="listitem"
+              key={src}
+              onClick={() => setActiveIndex(index)}
+              aria-label={`Show image ${index + 1}`}
+              aria-current={index === activeIndex}
+              className={`shrink-0 overflow-hidden rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] ${
+                index === activeIndex ? "border-[var(--psp-accent)] opacity-100" : "border-white/10 opacity-45 hover:opacity-75"
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt="" className="aspect-video w-28 object-cover sm:w-36" />
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}

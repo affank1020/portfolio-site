@@ -2,15 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-const playfulRoles = [
+const roles = [
   "Vibe Coder",
-  "Bug Negotiator",
-  "Professional Tab Opener",
-  "Pixel Wrangler",
-  "Chief Button Officer",
-  "Console Log Archaeologist",
-  "Full-Stack Overflow Developer",
-  "Works on My Machine Engineer",
+  "Software Engineer",
+  "AI Consultant",
 ] as const;
 
 interface XmbHeaderProps {
@@ -19,11 +14,11 @@ interface XmbHeaderProps {
 
 export function XmbHeader({ name = "AFFAN KHAN" }: XmbHeaderProps) {
   const [timeStr, setTimeStr] = useState<string>("");
-  const [role, setRole] = useState<string>(playfulRoles[0]);
+  const [role, setRole] = useState<string>(roles[0]);
 
   useEffect(() => {
     const roleTimeout = window.setTimeout(() => {
-      setRole(playfulRoles[Math.floor(Math.random() * playfulRoles.length)]);
+      setRole(roles[Math.floor(Math.random() * roles.length)]);
     }, 0);
 
     const updateTime = () => {
@@ -42,9 +37,9 @@ export function XmbHeader({ name = "AFFAN KHAN" }: XmbHeaderProps) {
 
   return (
     <header className="absolute left-8 right-8 top-6 z-30 flex select-none items-start justify-between">
-      <div className="flex flex-col items-start rounded-xl border border-white/10 bg-white/5 px-5 py-3 shadow-2xl backdrop-blur-md">
-        <span className="text-xl font-bold uppercase tracking-[0.2em] text-white drop-shadow-md">{name}</span>
-        <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">{role}</span>
+      <div className="flex flex-col items-start">
+        <span className="text-xl font-black uppercase tracking-[0.22em] text-white drop-shadow-md">{name}</span>
+        <span className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/40">{role}</span>
       </div>
 
       {timeStr && (

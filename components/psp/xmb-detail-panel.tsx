@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import type { XmbItem, XmbLayoutConfig } from "./types";
+import { MarkdownText } from "./markdown-text";
 
 interface XmbDetailPanelProps {
   activeItem?: XmbItem;
@@ -22,12 +23,9 @@ export function XmbDetailPanel({
 
   return (
     <div
-      className="absolute overflow-hidden pointer-events-none z-20"
+      className="absolute bottom-[3%] left-[48%] right-[6%] overflow-hidden pointer-events-none z-20"
       style={{
-        left: "48%",
-        right: "6%",
         top: `calc(${crossY * 100}% + ${belowClear}px)`,
-        bottom: "3%",
       }}
     >
       <AnimatePresence mode="wait">
@@ -39,6 +37,7 @@ export function XmbDetailPanel({
             exit={{ opacity: 0, y: -10, transition: { duration: 0.1 } }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
             className="flex flex-col gap-4 max-w-xl pointer-events-auto"
+            style={{ fontFamily: activeItem.fontFamily }}
           >
             <div className="flex flex-col gap-1">
               {activeItem.eyebrow && (
@@ -57,19 +56,29 @@ export function XmbDetailPanel({
             <div className="h-px bg-white/20 w-3/4 my-1" />
 
             {activeItem.description && (
-              <p className="whitespace-pre-line text-base leading-relaxed text-white/60 drop-shadow">
-                {activeItem.description}
-              </p>
+              <MarkdownText>{activeItem.description}</MarkdownText>
             )}
 
-            {activeItem.activationLabel && onActivate && (
+            {activeItem.activationLabel && activeItem.href && activeItem.downloadName ? (
+              <a
+                href={activeItem.href}
+                download={activeItem.downloadName}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontFamily: activeItem.fontFamily }}
+                className="flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-white transition hover:border-[var(--psp-accent)] hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)]"
+              >
+                <span aria-hidden="true">↓</span>
+                <span>{activeItem.activationLabel}</span>
+              </a>
+            ) : activeItem.activationLabel && onActivate && (
               <button
                 type="button"
                 onClick={onActivate}
                 disabled={activeItem.activationLabel === "Active"}
-                className="flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-white transition hover:border-[var(--psp-accent)] hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] disabled:cursor-default disabled:opacity-50"
+                style={{ fontFamily: activeItem.fontFamily }}
+                className="flex w-fit items-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-white transition hover:border-[var(--psp-accent)] hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] disabled:cursor-default disabled:opacity-50"
               >
-                <kbd className="rounded bg-white/20 px-2 py-1 font-mono text-white shadow-sm">⏎</kbd>
                 <span>{activeItem.activationLabel}</span>
               </button>
             )}

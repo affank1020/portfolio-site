@@ -1,19 +1,24 @@
 import type { ComponentType } from "react";
+import type { PortfolioLink } from "@/lib/contentful";
 
 export interface XmbItem {
   id: string;
-  kind?: "home" | "project" | "experience" | "post" | "contact" | "setting";
+  kind?: "home" | "project" | "experience" | "post" | "contact" | "setting" | "folder";
   title: string;
   eyebrow?: string;
   subtitle?: string;
   description?: string;
   image?: string;
+  fontFamily?: string;
+  gallery?: string[];
   body?: string;
   highlights?: string[];
   tags?: string[];
   href?: string | null;
+  downloadName?: string;
+  links?: PortfolioLink[];
   detailHref?: string;
-  action?: "theme" | "motion" | "settings-theme" | "settings-back";
+  action?: "theme" | "motion" | "settings-theme" | "settings-back" | "open-collection" | "collection-back";
   actionValue?: string;
   selected?: boolean;
   activationLabel?: string;
