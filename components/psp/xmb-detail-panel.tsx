@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import type { XmbItem, XmbLayoutConfig } from "./types";
 import { MarkdownText } from "./markdown-text";
+import { XmbExperienceDetail } from "./xmb-experience-detail";
 
 interface XmbDetailPanelProps {
   activeItem?: XmbItem;
@@ -39,6 +40,9 @@ export function XmbDetailPanel({
             className="flex flex-col gap-4 max-w-xl pointer-events-auto"
             style={{ fontFamily: activeItem.fontFamily }}
           >
+            {activeItem.kind === "experience" ? (
+              <XmbExperienceDetail item={activeItem} />
+            ) : <>
             <div className="flex flex-col gap-1">
               {activeItem.eyebrow && (
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--psp-accent)]">
@@ -108,7 +112,7 @@ export function XmbDetailPanel({
                 ))}
               </div>
             )}
-
+            </>}
           </motion.div>
         )}
       </AnimatePresence>
