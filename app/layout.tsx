@@ -30,7 +30,7 @@ const spaceGrotesk = Space_Grotesk({ variable: "--font-space-grotesk", subsets: 
 
 export const metadata: Metadata = {
   title: "Affan Khan | Portfolio",
-  description: "Software engineer building thoughtful products, developer tools, and dependable systems.",
+  description: "Software engineer.",
 };
 
 export default function RootLayout({

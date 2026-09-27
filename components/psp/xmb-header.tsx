@@ -38,7 +38,7 @@ export function XmbHeader({ name = "AFFAN KHAN" }: XmbHeaderProps) {
   return (
     <header className="absolute left-8 right-8 top-6 z-30 flex select-none items-start justify-between">
       <div className="flex flex-col items-start">
-        <span className="text-xl font-black uppercase tracking-[0.22em] text-white drop-shadow-md">{name}</span>
+        <span className="text-2xl font-black uppercase tracking-[0.22em] text-white drop-shadow-md">{name}</span>
         <span className="mt-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/40">{role}</span>
       </div>
 
