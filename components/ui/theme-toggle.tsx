@@ -5,7 +5,10 @@ import type { ThemeName } from "@/lib/theme";
 
 export function ThemeToggle({ themeName, onToggle }: { themeName: ThemeName; onToggle: () => void }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const isDark = themeName === "dark";
 

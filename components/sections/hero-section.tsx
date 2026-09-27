@@ -23,7 +23,7 @@ export function HeroSection({ accentColor, heroData }: { accentColor: string; he
           <br />
           <span style={{ color: accentColor }}>{heroData.lastName}</span>
         </h1>
-        <p className="max-w-md text-base font-light leading-relaxed text-muted-foreground md:text-lg">
+        <p className="max-w-md whitespace-pre-line text-base font-light leading-relaxed text-muted-foreground md:text-lg">
           {heroData.description}
         </p>
       </motion.div>

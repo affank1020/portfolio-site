@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PortfolioWork, PortfolioHero, PortfolioContact, PortfolioExperience } from "@/lib/contentful";
+import type { PortfolioWork, PortfolioHero, PortfolioContact, PortfolioExperience, PortfolioPost } from "@/lib/contentful";
 import { applyThemeVariables, themes } from "@/lib/theme";
 import { motion, useScroll, useSpring, AnimatePresence } from "framer-motion";
 
@@ -16,20 +16,19 @@ import { PspPortfolioPage } from "@/components/psp/psp-portfolio-page";
 
 export type UiMode = "classic" | "psp";
 
-export default function PortfolioPage(props: { workItems: PortfolioWork[]; hero: PortfolioHero; contact: PortfolioContact; experienceItems: PortfolioExperience[] }) {
+export default function PortfolioPage(props: { workItems: PortfolioWork[]; hero: PortfolioHero; contact: PortfolioContact; experienceItems: PortfolioExperience[]; posts: PortfolioPost[] }) {
   const [uiMode, setUiMode] = useState<UiMode>("psp");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     // Force dark theme globally for minimal style
     applyThemeVariables(document.documentElement.style, "dark");
     document.documentElement.style.colorScheme = "dark";
     
-    const saved = window.localStorage.getItem("portfolio-uimode");
-    if (saved === "psp" || saved === "classic") {
-      setUiMode(saved);
-    }
+    const frame = window.requestAnimationFrame(() => {
+      const saved = window.localStorage.getItem("portfolio-uimode");
+      if (saved === "psp" || saved === "classic") setUiMode(saved);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const toggleUiMode = () => {
@@ -37,8 +36,6 @@ export default function PortfolioPage(props: { workItems: PortfolioWork[]; hero:
     setUiMode(nextMode);
     window.localStorage.setItem("portfolio-uimode", nextMode);
   };
-
-  if (!mounted) return null;
 
   return (
     <>
@@ -51,7 +48,21 @@ export default function PortfolioPage(props: { workItems: PortfolioWork[]; hero:
   );
 }
 
-function ClassicPortfolioPage({ workItems, hero, contact, experienceItems, uiMode, toggleUiMode }: any) {
+function ClassicPortfolioPage({
+  workItems,
+  hero,
+  contact,
+  experienceItems,
+  uiMode,
+  toggleUiMode,
+}: {
+  workItems: PortfolioWork[];
+  hero: PortfolioHero;
+  contact: PortfolioContact;
+  experienceItems: PortfolioExperience[];
+  uiMode: UiMode;
+  toggleUiMode: () => void;
+}) {
   const [activeProject, setActiveProject] = useState<PortfolioWork | null>(null);
   const [activeSection, setActiveSection] = useState("");
   

@@ -34,3 +34,72 @@ body::selection {
   background: color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--foreground);
 }
+
+.psp-shell {
+  background:
+    radial-gradient(circle at 76% 18%, color-mix(in srgb, var(--psp-accent) 8%, transparent), transparent 28%),
+    var(--psp-bg);
+  color: var(--psp-fg);
+}
+
+.psp-ambient {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.psp-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 100% 4px;
+  mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent);
+}
+
+.psp-wave {
+  position: absolute;
+  left: -18%;
+  width: 136%;
+  height: 42%;
+  border-radius: 48% 52% 45% 55%;
+  filter: blur(46px);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.psp-wave-a {
+  bottom: -17%;
+  background: var(--psp-wave-a);
+  animation: psp-wave-a 18s ease-in-out infinite alternate;
+}
+
+.psp-wave-b {
+  bottom: -26%;
+  background: var(--psp-wave-b);
+  animation: psp-wave-b 24s ease-in-out infinite alternate;
+}
+
+@keyframes psp-wave-a {
+  from { transform: translate3d(-4%, 0, 0) rotate(-3deg) scale(1); }
+  to { transform: translate3d(6%, -12%, 0) rotate(4deg) scale(1.08); }
+}
+
+@keyframes psp-wave-b {
+  from { transform: translate3d(7%, -5%, 0) rotate(3deg) scale(1.08); }
+  to { transform: translate3d(-5%, -15%, 0) rotate(-5deg) scale(1); }
+}
+
+[data-reduce-motion="true"] .psp-wave {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .psp-wave {
+    animation: none !important;
+  }
+}
+
+/* The XMB remains fully usable when animation is disabled. */

@@ -1,47 +1,69 @@
-This is a template built with Next.js App Router and a Contentful-backed work/resources section.
+# Affan Khan — Portfolio
 
-## Getting Started
+A PSP/XMB-inspired portfolio built with Next.js and Contentful. The desktop experience supports keyboard and pointer navigation; mobile uses a touch-friendly version of the same visual language.
 
-First, run the development server:
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev -- -p 3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3001](http://localhost:3001).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Contentful setup
 
-## Contentful Setup
+Add these values to `.env.local`:
 
-The resources section reads from Contentful when these environment variables are present:
+```bash
+CONTENTFUL_SPACE_ID=...
+CONTENTFUL_DELIVERY_TOKEN=...
+```
 
-- `CONTENTFUL_SPACE_ID`
-- `CONTENTFUL_DELIVERY_TOKEN`
-- `CONTENTFUL_WORK_CONTENT_TYPE` (defaults to `workItem`)
-- `CONTENTFUL_RESOURCE_CONTENT_TYPE` (defaults to `resource`)
+The app reads the following Contentful content types. All fields are optional except the identifying title/name field; local fallback content keeps the site usable while a model is being filled in.
 
-If the values are missing, the site automatically falls back to included starter resources so the template still works out of the box.
+### `portfolioHero`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `firstName`, `lastName`, `tagline`, `description`
 
-## Learn More
+### `portfolioContact`
 
-To learn more about Next.js, take a look at the following resources:
+- `email`, `responseTime`, `githubUrl`, `linkedinUrl`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### `workItem`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `title`, `slug`, `year`, `summary`, `body`
+- `role`, `note`, `tags`, `outcomes`
+- `href`, `repositoryUrl`, `liveUrl`
+- `image`, `gallery`
 
-## Deploy on Vercel
+`summary` stays concise in the XMB. `body` can be plain text or Contentful Rich Text and appears instantly in the expanded XMB view. `/projects/[slug]` remains available as a shareable direct URL.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### `experienceItem`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `company`, `role`, `period`, `description`
+- `highlights`, `tags`, `accent`, `image`
+
+### `blogPost`
+
+- `title`, `slug`, `excerpt`, `publishedAt`
+- `body`, `tags`, `heroImage`
+
+Published posts appear in the Journal category and open inside the XMB; `/journal/[slug]` remains available as a shareable direct URL. Until the first post exists, the interface displays a non-clickable “Writing, soon” placeholder.
+
+## Interaction
+
+- `←` / `→`: change category
+- `↑` / `↓`: change item
+- `Enter`: perform the contextual action shown on screen
+- `Escape`: close expanded content or leave a Settings subsection
+- Categories and items are also clickable and keyboard-focusable
+
+Themes and reduced-motion preferences are available in the Settings category and persist locally.
+
+## Checks
+
+```bash
+npm run lint
+npm run build
+```

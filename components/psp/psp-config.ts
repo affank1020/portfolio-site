@@ -3,6 +3,7 @@ import type {
   PortfolioHero,
   PortfolioContact,
   PortfolioExperience,
+  PortfolioPost,
 } from "@/lib/contentful";
 import type { XmbCategory, XmbLayoutConfig } from "./types";
 import {
@@ -10,6 +11,8 @@ import {
   ProjectsIcon,
   ExperienceIcon,
   ContactIcon,
+  JournalIcon,
+  SettingsIcon,
 } from "./xmb-icons";
 
 /**
@@ -31,7 +34,11 @@ export interface BuildCategoriesInput {
   hero: PortfolioHero;
   workItems: PortfolioWork[];
   experienceItems: PortfolioExperience[];
+  posts: PortfolioPost[];
   contact: PortfolioContact;
+  themeName: string;
+  reduceMotion: boolean;
+  settingsView: "root" | "theme";
 }
 
 /**
@@ -42,8 +49,68 @@ export function buildXmbCategories({
   hero,
   workItems,
   experienceItems,
+  posts,
   contact,
+  themeName,
+  reduceMotion,
+  settingsView,
 }: BuildCategoriesInput): XmbCategory[] {
+  const themeItems = [
+    {
+      id: "settings-back",
+      kind: "setting" as const,
+      title: "Back to settings",
+      subtitle: "Settings",
+      description: "Return to the main settings menu.",
+      action: "settings-back" as const,
+      activationLabel: "Go back",
+    },
+    {
+      id: "theme-midnight",
+      kind: "setting" as const,
+      title: "Midnight",
+      subtitle: themeName === "midnight" ? "Active theme" : "Theme",
+      description: "High-contrast monochrome with a quiet blue signal glow.",
+      action: "theme" as const,
+      actionValue: "midnight",
+      selected: themeName === "midnight",
+      activationLabel: themeName === "midnight" ? "Active" : "Apply theme",
+    },
+    {
+      id: "theme-aurora",
+      kind: "setting" as const,
+      title: "Aurora",
+      subtitle: themeName === "aurora" ? "Active theme" : "Theme",
+      description: "Cool violet and cyan light moving beneath the XMB.",
+      action: "theme" as const,
+      actionValue: "aurora",
+      selected: themeName === "aurora",
+      activationLabel: themeName === "aurora" ? "Active" : "Apply theme",
+    },
+    {
+      id: "theme-ember",
+      kind: "setting" as const,
+      title: "Ember",
+      subtitle: themeName === "ember" ? "Active theme" : "Theme",
+      description: "A warm amber signal over deep charcoal.",
+      action: "theme" as const,
+      actionValue: "ember",
+      selected: themeName === "ember",
+      activationLabel: themeName === "ember" ? "Active" : "Apply theme",
+    },
+    {
+      id: "theme-arctic",
+      kind: "setting" as const,
+      title: "Arctic",
+      subtitle: themeName === "arctic" ? "Active theme" : "Theme",
+      description: "Silver-blue tones inspired by the original system interface.",
+      action: "theme" as const,
+      actionValue: "arctic",
+      selected: themeName === "arctic",
+      activationLabel: themeName === "arctic" ? "Active" : "Apply theme",
+    },
+  ];
+
   return [
     {
       id: "home",
@@ -52,8 +119,9 @@ export function buildXmbCategories({
       items: [
         {
           id: "hero-intro",
-          title: `${hero.firstName} ${hero.lastName}`,
-          subtitle: hero.tagline,
+          kind: "home",
+          title: "About Me",
+          // subtitle: `Hi, I’m ${hero.firstName} ${hero.lastName}.`,
           description: hero.description,
         },
       ],
@@ -62,13 +130,19 @@ export function buildXmbCategories({
       id: "projects",
       label: "Projects",
       icon: ProjectsIcon,
-      items: workItems.map((w, idx) => ({
-        id: `project-${idx}`,
+      items: workItems.map((w) => ({
+        id: `project-${w.slug}`,
+        kind: "project",
         title: w.title,
+        eyebrow: w.role,
         subtitle: `${w.year} — ${w.note}`,
         description: w.summary,
+        body: w.body,
+        highlights: w.outcomes,
         tags: w.tags,
         href: w.href,
+        detailHref: `/projects/${w.slug}`,
+        activationLabel: "View case study",
       })),
     },
     {
@@ -77,10 +151,29 @@ export function buildXmbCategories({
       icon: ExperienceIcon,
       items: experienceItems.map((e, idx) => ({
         id: `exp-${idx}`,
+        kind: "experience",
         title: e.company,
+        image: e.image,
         subtitle: `${e.role} · ${e.period}`,
         description: e.description,
+        highlights: e.highlights,
         tags: e.tags,
+      })),
+    },
+    {
+      id: "journal",
+      label: "Journal",
+      icon: JournalIcon,
+      items: posts.map((post) => ({
+        id: `post-${post.slug}`,
+        kind: "post",
+        title: post.title,
+        subtitle: post.publishedAt,
+        description: post.excerpt,
+        body: post.body,
+        tags: post.tags,
+        detailHref: post.placeholder ? undefined : `/journal/${post.slug}`,
+        activationLabel: post.placeholder ? undefined : "Read article",
       })),
     },
     {
@@ -90,6 +183,7 @@ export function buildXmbCategories({
       items: [
         {
           id: "contact-email",
+          kind: "contact",
           title: "Email",
           subtitle: contact.email,
           description: `Direct contact — ${contact.responseTime}`,
@@ -97,6 +191,7 @@ export function buildXmbCategories({
         },
         {
           id: "contact-github",
+          kind: "contact",
           title: "GitHub",
           subtitle: contact.githubUrl,
           description: "Open profile on GitHub",
@@ -104,10 +199,37 @@ export function buildXmbCategories({
         },
         {
           id: "contact-linkedin",
+          kind: "contact",
           title: "LinkedIn",
           subtitle: contact.linkedinUrl,
           description: "Connect on LinkedIn",
           href: contact.linkedinUrl,
+        },
+      ],
+    },
+    {
+      id: "settings",
+      label: "Settings",
+      icon: SettingsIcon,
+      items: settingsView === "theme" ? themeItems : [
+        {
+          id: "settings-theme",
+          kind: "setting",
+          title: "Theme",
+          subtitle: themeName.charAt(0).toUpperCase() + themeName.slice(1),
+          description: "Choose the colour and ambient-light profile for the XMB.",
+          action: "settings-theme",
+          activationLabel: "Open themes",
+        },
+        {
+          id: "motion",
+          kind: "setting",
+          title: "Reduced motion",
+          subtitle: reduceMotion ? "On" : "Off",
+          description: "Reduce springs, drifting light, and interface movement.",
+          action: "motion",
+          selected: reduceMotion,
+          activationLabel: reduceMotion ? "Turn off" : "Turn on",
         },
       ],
     },

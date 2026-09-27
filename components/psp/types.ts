@@ -2,11 +2,21 @@ import type { ComponentType } from "react";
 
 export interface XmbItem {
   id: string;
+  kind?: "home" | "project" | "experience" | "post" | "contact" | "setting";
   title: string;
+  eyebrow?: string;
   subtitle?: string;
   description?: string;
+  image?: string;
+  body?: string;
+  highlights?: string[];
   tags?: string[];
   href?: string | null;
+  detailHref?: string;
+  action?: "theme" | "motion" | "settings-theme" | "settings-back";
+  actionValue?: string;
+  selected?: boolean;
+  activationLabel?: string;
   note?: string;
   customContent?: React.ReactNode;
 }

@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Affan Khan | Portfolio",
-  description: "A template with a Contentful-backed resources layer.",
+  description: "Software engineer building thoughtful products, developer tools, and dependable systems.",
 };
 
 export default function RootLayout({
@@ -32,8 +32,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${bricolage.variable} ${dmSans.variable} ${geistMono.variable} h-full antialiased`}
-      style={getThemeStyle("light")}
+      style={getThemeStyle("dark")}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">{children}</body>
     </html>

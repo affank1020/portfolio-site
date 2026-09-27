@@ -2,46 +2,56 @@
 
 import { useEffect, useState } from "react";
 
+const playfulRoles = [
+  "Vibe Coder",
+  "Bug Negotiator",
+  "Professional Tab Opener",
+  "Pixel Wrangler",
+  "Chief Button Officer",
+  "Console Log Archaeologist",
+  "Full-Stack Overflow Developer",
+  "Works on My Machine Engineer",
+] as const;
+
 interface XmbHeaderProps {
   name?: string;
-  tagline?: string;
 }
 
-export function XmbHeader({ name = "AFFAN KHAN", tagline = "Software Engineer" }: XmbHeaderProps) {
+export function XmbHeader({ name = "AFFAN KHAN" }: XmbHeaderProps) {
   const [timeStr, setTimeStr] = useState<string>("");
+  const [role, setRole] = useState<string>(playfulRoles[0]);
 
   useEffect(() => {
+    const roleTimeout = window.setTimeout(() => {
+      setRole(playfulRoles[Math.floor(Math.random() * playfulRoles.length)]);
+    }, 0);
+
     const updateTime = () => {
       const now = new Date();
-      const month = now.getMonth() + 1;
-      const day = now.getDate();
-      const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setTimeStr(`${month}/${day}  ${time}`);
+      const date = now.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+      const time = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+      setTimeStr(`${date}  ${time}`);
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(roleTimeout);
+      clearInterval(interval);
+    };
   }, []);
 
   return (
-    <header className="absolute top-6 left-8 right-8 flex items-center justify-between z-30 select-none">
-      {/* Branding Name Card in top left */}
-      <div className="flex items-center gap-4 bg-white/5 border border-white/10 backdrop-blur-md px-4 py-2 rounded-lg shadow-2xl">
-        <div className="w-8 h-8 rounded bg-white text-black font-black flex items-center justify-center text-sm tracking-tighter">
-          AK
-        </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold tracking-widest text-white uppercase">{name}</span>
-          <span className="text-[10px] tracking-widest text-white/50 uppercase font-mono">{tagline}</span>
-        </div>
+    <header className="absolute left-8 right-8 top-6 z-30 flex select-none items-start justify-between">
+      <div className="flex flex-col items-start rounded-xl border border-white/10 bg-white/5 px-5 py-3 shadow-2xl backdrop-blur-md">
+        <span className="text-xl font-bold uppercase tracking-[0.2em] text-white drop-shadow-md">{name}</span>
+        <span className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">{role}</span>
       </div>
 
-      {/* PSP Style System Clock / Battery Indicator in top right */}
       {timeStr && (
-        <div className="flex items-center gap-3 text-xs tracking-widest font-mono text-white/40 bg-white/5 border border-white/5 px-3 py-1.5 rounded-full">
+        <div className="flex items-center gap-3 rounded-full border border-white/5 bg-white/5 px-3 py-1.5 font-mono text-xs tracking-widest text-white/45 backdrop-blur-md">
           <span>{timeStr}</span>
-          <div className="w-4 h-2 border border-white/40 rounded-sm p-[1px] flex items-center">
-            <div className="h-full w-3/4 bg-white/70 rounded-xs" />
+          <div className="flex h-2 w-4 items-center rounded-sm border border-white/40 p-[1px]">
+            <div className="h-full w-3/4 rounded-xs bg-white/70" />
           </div>
         </div>
       )}

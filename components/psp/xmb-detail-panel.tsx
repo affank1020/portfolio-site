@@ -8,6 +8,7 @@ interface XmbDetailPanelProps {
   activeCategoryIndex: number;
   activeItemIndex: number;
   config: XmbLayoutConfig;
+  onActivate?: () => void;
 }
 
 export function XmbDetailPanel({
@@ -15,6 +16,7 @@ export function XmbDetailPanel({
   activeCategoryIndex,
   activeItemIndex,
   config,
+  onActivate,
 }: XmbDetailPanelProps) {
   const { crossY, belowClear } = config;
 
@@ -25,7 +27,7 @@ export function XmbDetailPanel({
         left: "48%",
         right: "6%",
         top: `calc(${crossY * 100}% + ${belowClear}px)`,
-        bottom: "8%",
+        bottom: "3%",
       }}
     >
       <AnimatePresence mode="wait">
@@ -39,6 +41,11 @@ export function XmbDetailPanel({
             className="flex flex-col gap-4 max-w-xl pointer-events-auto"
           >
             <div className="flex flex-col gap-1">
+              {activeItem.eyebrow && (
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--psp-accent)]">
+                  {activeItem.eyebrow}
+                </p>
+              )}
               <h2 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">
                 {activeItem.title}
               </h2>
@@ -50,12 +57,35 @@ export function XmbDetailPanel({
             <div className="h-px bg-white/20 w-3/4 my-1" />
 
             {activeItem.description && (
-              <p className="text-base text-white/60 leading-relaxed drop-shadow">
+              <p className="whitespace-pre-line text-base leading-relaxed text-white/60 drop-shadow">
                 {activeItem.description}
               </p>
             )}
 
+            {activeItem.activationLabel && onActivate && (
+              <button
+                type="button"
+                onClick={onActivate}
+                disabled={activeItem.activationLabel === "Active"}
+                className="flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-white transition hover:border-[var(--psp-accent)] hover:bg-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] disabled:cursor-default disabled:opacity-50"
+              >
+                <kbd className="rounded bg-white/20 px-2 py-1 font-mono text-white shadow-sm">⏎</kbd>
+                <span>{activeItem.activationLabel}</span>
+              </button>
+            )}
+
             {activeItem.customContent}
+
+            {activeItem.highlights && activeItem.highlights.length > 0 && (
+              <ul className="grid gap-2 text-sm text-white/60" aria-label="Highlights">
+                {activeItem.highlights.slice(0, 3).map((highlight) => (
+                  <li key={highlight} className="flex gap-2">
+                    <span className="text-[var(--psp-accent)]" aria-hidden="true">◆</span>
+                    <span>{highlight}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {activeItem.tags && activeItem.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
@@ -70,14 +100,6 @@ export function XmbDetailPanel({
               </div>
             )}
 
-            {activeItem.href && activeItem.href !== "#" && (
-              <div className="mt-4 flex items-center gap-2 text-xs text-white/50">
-                <kbd className="px-2 py-1 rounded bg-white/20 text-white font-mono shadow-sm">
-                  ⏎
-                </kbd>
-                <span>Press Enter to open link</span>
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

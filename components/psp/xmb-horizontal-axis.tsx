@@ -7,12 +7,16 @@ interface XmbHorizontalAxisProps {
   categories: XmbCategory[];
   activeCategoryIndex: number;
   config: XmbLayoutConfig;
+  onCategorySelect: (index: number) => void;
+  locked?: boolean;
 }
 
 export function XmbHorizontalAxis({
   categories,
   activeCategoryIndex,
   config,
+  onCategorySelect,
+  locked = false,
 }: XmbHorizontalAxisProps) {
   const { crossX, crossY, hGap, iconActiveSize, iconInactiveSize } = config;
 
@@ -25,9 +29,15 @@ export function XmbHorizontalAxis({
         const size = active ? iconActiveSize : iconInactiveSize;
 
         return (
-          <motion.div
+          <motion.button
+            type="button"
             key={c.id}
-            className="absolute flex flex-col items-center pointer-events-none z-20"
+            onClick={() => onCategorySelect(i)}
+            disabled={locked}
+            aria-label={`Open ${c.label}`}
+            aria-disabled={locked}
+            aria-current={active ? "page" : undefined}
+            className="absolute flex flex-col items-center pointer-events-auto z-20 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent"
             initial={false}
             animate={{
               x: dx,
@@ -59,7 +69,7 @@ export function XmbHorizontalAxis({
                 </motion.span>
               )}
             </AnimatePresence>
-          </motion.div>
+          </motion.button>
         );
       })}
     </>
