@@ -164,7 +164,7 @@ export function XmbVerticalAxis({
               key={`${activeCategoryIndex}-${item.id || i}`}
               onClick={() => isActive ? onItemActivate(i) : onItemSelect(i)}
               aria-current={isActive ? "true" : undefined}
-              className="absolute -ml-[10.5rem] flex w-[21rem] items-center gap-4 pointer-events-auto rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent 2xl:ml-0 2xl:w-auto"
+              className="absolute -ml-[11.5rem] flex w-[23rem] items-center gap-4 pointer-events-auto rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] focus-visible:ring-offset-4 focus-visible:ring-offset-transparent 2xl:ml-0 2xl:w-auto"
               initial={{ opacity: 0, x: -20, y: yPx }}
               animate={{
                 opacity: isActive ? 1 : 0.4,
@@ -180,7 +180,7 @@ export function XmbVerticalAxis({
             >
               <ItemIcon active={isActive} item={item} />
               <span
-                className={`min-w-0 flex-1 truncate whitespace-nowrap 2xl:max-w-[20ch] 2xl:flex-none ${
+                className={`min-w-0 flex-1 truncate whitespace-nowrap 2xl:max-w-[17ch] 2xl:flex-none ${
                   isActive
                     ? "text-2xl font-bold tracking-wide text-white drop-shadow-lg"
                     : "text-xl font-normal text-white/70"

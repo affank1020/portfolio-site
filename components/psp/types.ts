@@ -8,6 +8,7 @@ export interface XmbItem {
   eyebrow?: string;
   subtitle?: string;
   period?: string;
+  date?: string;
   description?: string;
   image?: string;
   fontFamily?: string;

@@ -52,7 +52,8 @@ function projectItem(work: PortfolioWork): XmbItem {
     kind: "project",
     title: work.title,
     eyebrow: work.role,
-    subtitle: [work.year, work.note].filter(Boolean).join(" — "),
+    date: work.year,
+    note: work.note,
     description: work.summary,
     body: work.body,
     image: work.image,
@@ -71,12 +72,13 @@ function postItem(post: PortfolioPost): XmbItem {
     id: `post-${post.slug}`,
     kind: "post",
     title: post.title,
-    subtitle: post.publishedAt,
+    date: post.publishedAt,
     description: post.excerpt,
     body: post.body,
     tags: post.tags,
+    image: post.heroImage,
     detailHref: post.placeholder ? undefined : `/blog/${post.slug}`,
-    activationLabel: post.placeholder ? undefined : "Read article",
+    activationLabel: post.placeholder ? undefined : "Read post",
   };
 }
 

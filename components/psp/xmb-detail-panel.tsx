@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { XmbItem, XmbLayoutConfig } from "./types";
 import { MarkdownText } from "./markdown-text";
 import { XmbExperienceDetail } from "./xmb-experience-detail";
+import { XmbBlogDetail } from "./xmb-blog-detail";
+import { XmbProjectDetail } from "./xmb-project-detail";
 
 interface XmbDetailPanelProps {
   activeItem?: XmbItem;
@@ -42,6 +44,10 @@ export function XmbDetailPanel({
           >
             {activeItem.kind === "experience" ? (
               <XmbExperienceDetail item={activeItem} />
+            ) : activeItem.kind === "project" ? (
+              <XmbProjectDetail item={activeItem} onOpen={onActivate} />
+            ) : activeItem.kind === "post" ? (
+              <XmbBlogDetail item={activeItem} onRead={onActivate} />
             ) : <>
             <div className="flex flex-col gap-1">
               {activeItem.eyebrow && (

@@ -9,7 +9,7 @@ export function XmbExperienceDetail({ item, compact = false }: XmbExperienceDeta
   return (
     <div className={compact ? "space-y-5" : "space-y-6"}>
       {compact ? (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-[var(--psp-accent)]">Experience</p>
             {item.period && (
@@ -24,7 +24,7 @@ export function XmbExperienceDetail({ item, compact = false }: XmbExperienceDeta
         <div className="flex items-start justify-between gap-5">
           <div className="min-w-0">
             <p className="text-[0.65rem] font-semibold uppercase tracking-[0.24em] text-[var(--psp-accent)]">Experience</p>
-            <h2 className="mt-1 text-4xl font-bold tracking-tight text-white drop-shadow-md">{item.title}</h2>
+            <h2 className="mt-5 text-4xl font-bold tracking-tight text-white drop-shadow-md">{item.title}</h2>
           </div>
           {item.period && (
             <span className="shrink-0 rounded-full border border-[var(--psp-accent)]/35 bg-[var(--psp-accent)]/10 px-3 py-1.5 text-xs font-semibold tracking-wide text-[var(--psp-accent)] shadow-sm">

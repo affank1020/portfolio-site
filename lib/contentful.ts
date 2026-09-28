@@ -138,7 +138,7 @@ const fallbackPosts: PortfolioPost[] = [
     title: "Writing, soon",
     slug: "writing-soon",
     excerpt: "Longer notes on software, product decisions, and the systems behind the work will live here.",
-    body: "This blog is ready for its first entry. Publish a blogPost in Contentful and it will appear here automatically.",
+    body: "This blog is ready for its first entry. Publish a blogEntry in Contentful and it will appear here automatically.",
     publishedAt: "Coming soon",
     tags: ["Blog"],
     placeholder: true,
@@ -211,15 +211,51 @@ function richTextField(fields: Record<string, unknown> | undefined, key: string)
   const value = fields?.[key];
   if (typeof value === "string") return value;
 
-  const collectText = (node: unknown): string => {
+  const renderNode = (node: unknown): string => {
     if (!isRecord(node)) return "";
-    if (typeof node.value === "string") return node.value;
+    if (typeof node.value === "string") {
+      const leadingWhitespace = node.value.match(/^\s*/)?.[0] ?? "";
+      const trailingWhitespace = node.value.match(/\s*$/)?.[0] ?? "";
+      const markableStart = leadingWhitespace.length;
+      const markableEnd = node.value.length - trailingWhitespace.length;
+      if (markableEnd <= markableStart) return node.value;
+      const markableText = node.value.slice(markableStart, markableEnd);
+      const marks = Array.isArray(node.marks)
+        ? node.marks.flatMap((mark) => isRecord(mark) && typeof mark.type === "string" ? [mark.type] : [])
+        : [];
+      const markedText = marks.reduce((text, mark) => {
+        if (mark === "bold") return `**${text}**`;
+        if (mark === "italic") return `*${text}*`;
+        if (mark === "code") return `\`${text}\``;
+        return text;
+      }, markableText);
+      return `${leadingWhitespace}${markedText}${trailingWhitespace}`;
+    }
     if (!Array.isArray(node.content)) return "";
-    const content = node.content.map(collectText).filter(Boolean).join("");
-    return node.nodeType === "paragraph" || node.nodeType === "heading-2" ? `${content}\n\n` : content;
+    const content = node.content.map(renderNode).filter(Boolean).join("");
+
+    if (node.nodeType === "paragraph") return `${content}\n\n`;
+    if (typeof node.nodeType === "string" && /^heading-[1-6]$/.test(node.nodeType)) {
+      const level = Number(node.nodeType.at(-1));
+      return `${"#".repeat(level)} ${content}\n\n`;
+    }
+    if (node.nodeType === "unordered-list" || node.nodeType === "ordered-list") {
+      return `${node.content.map((item, index) => {
+        const text = renderNode(item).trim().replace(/\n+/g, "\n  ");
+        return `${node.nodeType === "ordered-list" ? `${index + 1}.` : "-"} ${text}`;
+      }).join("\n")}\n\n`;
+    }
+    if (node.nodeType === "blockquote") {
+      return `${content.trim().split("\n").map((line) => `> ${line}`).join("\n")}\n\n`;
+    }
+    if (node.nodeType === "hr") return "---\n\n";
+    if (node.nodeType === "hyperlink" && isRecord(node.data) && typeof node.data.uri === "string") {
+      return `[${content}](${node.data.uri})`;
+    }
+    return content;
   };
 
-  const result = collectText(value).trim();
+  const result = renderNode(value).trim();
   return result || undefined;
 }
 
@@ -348,8 +384,8 @@ function mapPostEntry(entry: ContentfulEntry, assets: ContentfulAsset[]): Portfo
     title,
     slug: stringField(fields, "slug") ?? slugify(title),
     excerpt: stringField(fields, "excerpt") ?? stringField(fields, "summary") ?? "",
-    body: richTextField(fields, "body") ?? "",
-    publishedAt: stringField(fields, "publishedAt") ?? "",
+    body: richTextField(fields, "content") ?? richTextField(fields, "body") ?? "",
+    publishedAt: stringField(fields, "date") ?? stringField(fields, "publishedAt") ?? "",
     tags: stringArrayField(fields, "tags") ?? [],
     heroImage: getAssetUrl(fields, "heroImage", assets),
     collectionId: referenceIdField(fields, "collection"),
@@ -380,7 +416,7 @@ export async function getPortfolioContent() {
     getContentfulData("portfolioContact"),
     getContentfulData("workItem"),
     getContentfulData("experienceItem"),
-    getContentfulData("blogPost"),
+    getContentfulData("blogEntry"),
     getContentfulData("portfolioCollection"),
   ]);
 

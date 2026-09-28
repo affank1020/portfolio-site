@@ -6,6 +6,8 @@ import { HorizontalScrollFade } from "./horizontal-scroll-fade";
 import { PspMobileSettings } from "./psp-mobile-settings";
 import { PspMobileContact } from "./psp-mobile-contact";
 import { XmbExperienceDetail } from "./xmb-experience-detail";
+import { XmbBlogDetail } from "./xmb-blog-detail";
+import { XmbProjectDetail } from "./xmb-project-detail";
 
 interface PspMobileViewProps {
   categories: XmbCategory[];
@@ -134,6 +136,10 @@ export function PspMobileView({
           <section className="mt-5 rounded-3xl border border-white/12 bg-[var(--psp-panel)] p-6 shadow-2xl backdrop-blur-xl" aria-live="polite" style={{ fontFamily: item.fontFamily }}>
             {item.kind === "experience" ? (
               <XmbExperienceDetail item={item} compact />
+            ) : item.kind === "project" ? (
+              <XmbProjectDetail item={item} compact onOpen={item.activationLabel ? () => onItemActivate(activeItemIndex) : undefined} />
+            ) : item.kind === "post" ? (
+              <XmbBlogDetail item={item} compact onRead={item.activationLabel ? () => onItemActivate(activeItemIndex) : undefined} />
             ) : <>
             {item.eyebrow && (
               <p className="text-xs uppercase tracking-[0.2em] text-[var(--psp-accent)]">{item.eyebrow}</p>

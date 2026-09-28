@@ -13,6 +13,37 @@ const richText = (...paragraphs: string[]) => ({
   })),
 });
 
+const markedRichText = {
+  nodeType: "document",
+  content: [
+    { nodeType: "heading-2", content: [{ nodeType: "text", value: "Introduction" }] },
+    {
+      nodeType: "paragraph",
+      content: [
+        { nodeType: "text", value: "Post " },
+        { nodeType: "text", value: "body", marks: [{ type: "bold" }] },
+        { nodeType: "text", value: " now", marks: [{ type: "italic" }] },
+        { nodeType: "text", value: " code", marks: [{ type: "code" }, { type: "underline" }] },
+        { nodeType: "text", value: " and " },
+        { nodeType: "hyperlink", data: { uri: "https://example.com/post" }, content: [{ nodeType: "text", value: "a link" }] },
+      ],
+    },
+    {
+      nodeType: "unordered-list",
+      content: [
+        { nodeType: "list-item", content: [{ nodeType: "paragraph", content: [{ nodeType: "text", value: "One" }] }] },
+        { nodeType: "list-item", content: [{ nodeType: "paragraph", content: [{ nodeType: "text", value: "Two" }] }] },
+      ],
+    },
+    {
+      nodeType: "ordered-list",
+      content: [{ nodeType: "list-item", content: [{ nodeType: "paragraph", content: [{ nodeType: "text", value: "First" }] }] }],
+    },
+    { nodeType: "blockquote", content: [{ nodeType: "paragraph", content: [{ nodeType: "text", value: "Quoted" }] }] },
+    { nodeType: "hr", content: [] },
+  ],
+};
+
 function asset(id: string, url: string) {
   return { sys: { id }, fields: { file: { url } } };
 }
@@ -73,6 +104,7 @@ test("maps a complete Contentful portfolio response", withContentfulEnvironment(
           links: { items: [
             { label: "Website", url: "https://example.com", type: "website" },
             { label: "Bad protocol", url: "javascript:alert(1)", type: "website" },
+            { label: "Malformed", url: "not a url", type: "website" },
             { label: "Unknown type", url: "https://example.com/more", type: "strange" },
           ] },
         } },
@@ -87,8 +119,8 @@ test("maps a complete Contentful portfolio response", withContentfulEnvironment(
       ],
       includes: { Asset: [asset("logo", "//assets.example/logo.png")] },
     },
-    blogPost: {
-      items: [{ fields: { title: "Hello World", summary: "Fallback excerpt", body: richText("Post body"), publishedAt: "2026-01-01", tags: ["Engineering"], collection: { sys: { id: "notes" } }, heroImage: { sys: { id: "hero" } } } }],
+    blogEntry: {
+      items: [{ fields: { title: "Hello World", summary: "Fallback excerpt", content: markedRichText, date: "January 2026", tags: ["Engineering"], collection: { sys: { id: "notes" } }, heroImage: { sys: { id: "hero" } } } }],
       includes: { Asset: [asset("hero", "//assets.example/hero.png")] },
     },
     portfolioCollection: {
@@ -131,6 +163,10 @@ test("maps a complete Contentful portfolio response", withContentfulEnvironment(
   assert.deepEqual(content.experience[0].highlights, ["One"]);
   assert.equal(content.experience[0].image, "https://assets.example/logo.png");
   assert.equal(content.posts[0].excerpt, "Fallback excerpt");
+  assert.equal(content.posts[0].body, "## Introduction\n\nPost **body** *now* `code` and [a link](https://example.com/post)\n\n- One\n- Two\n\n1. First\n\n> Quoted\n\n---");
+  assert.equal(content.posts[0].publishedAt, "January 2026");
+  assert.deepEqual(content.posts[0].tags, ["Engineering"]);
+  assert.equal(content.posts[0].heroImage, "https://assets.example/hero.png");
   assert.equal(content.posts[0].collectionId, "notes");
   assert.deepEqual(content.collections.map((collection) => collection.id), ["apps", "notes"]);
   assert.equal(content.collections[0].section, "projects");
@@ -149,4 +185,12 @@ test("falls back gracefully when Contentful requests fail", withContentfulEnviro
   assert.deepEqual(content.experience, fallback.experience);
   assert.deepEqual(content.posts, fallback.posts);
   assert.deepEqual(content.collections, []);
+}));
+
+test("falls back gracefully when the Contentful network request throws", withContentfulEnvironment(async () => {
+  global.fetch = (async () => { throw new Error("network unavailable"); }) as typeof fetch;
+
+  const content = await getPortfolioContent();
+  assert.deepEqual(content.hero, getFallbackPortfolioContent().hero);
+  assert.deepEqual(content.workItems, []);
 }));
