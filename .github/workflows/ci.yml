@@ -54,3 +54,5 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+# Atlas PR #64 smoke test: comment-only workflow change on a disposable branch.
