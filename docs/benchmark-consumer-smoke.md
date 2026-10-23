@@ -38,3 +38,22 @@ It created [Benchmark quality report comment #6339543108](https://github.com/aff
 **Comment-update test:** This documentation-only follow-up commit is deliberately the second head revision of PR #3. Re-run CI and the trusted publisher, then verify that existing comment **ID `6339543108`** is updated in place and no second Benchmark-owned report comment appears. Record the result on PR #3. Do not infer successful comment deduplication from unit tests alone.
 
 **Still outstanding:** a genuinely fork-originated PR on this consumer, plus its token-permission and ambiguous-identity checks. Do not merge this validation PR solely to claim fork support.
+
+## Reviewed Benchmark PR #11 consumer-rollout pilot (pending merge)
+
+This separate rollout PR upgrades the trusted reusable publisher from the reviewed PR #6 SHA to [Benchmark PR #11 merge](https://github.com/affank1020/benchmark/commit/bff973c94597897c095f76e0538ec145d7ecdc45), and enables the [trusted CI-start lifecycle](https://github.com/affank1020/benchmark/blob/bff973c94597897c095f76e0538ec145d7ecdc45/examples/lifecycle-pr.yml). Both references use **full immutable SHAs**, not `@main`; the privileged workflows only run on the consumer's default branch after this PR merges.
+
+The existing `npm run check` still runs lint, TypeScript and one coverage-threshold-enforced Node test suite. CI now uploads two **independent** artifacts, `benchmark-junit` (root `junit.xml`) and `benchmark-lcov` (root `lcov.info`), in addition to the legacy combined `benchmark-ci`. This intentionally duplicates small *uploads*, **not test executions**. The combined artifact lets the currently deployed old default-branch publisher continue reporting during review; the new caller selects the separate artifact IDs and uses `benchmark-lcov` for exact-base coverage lookup.
+
+**The repository has not yet installed an official GitHub Release artifact.** The pinned SHA is the independently reviewed Benchmark merge commit; a version tag and GitHub Release require a separate deliberate publication step. Installing release-generated workflow YAML can be handled in a subsequent reviewed PR once published.
+
+### Acceptance after merging this PR
+
+1. Check that the exact merge commit's **main push CI** passes and uploads `benchmark-junit`, `benchmark-lcov`, and `benchmark-ci`. Baseline coverage comparisons cannot succeed against an older base SHA that lacks `benchmark-lcov`.
+2. Open a **new** minimal PR based on that merge SHA. Since `workflow_run` only activates workflows already on the default branch, this rollout PR itself cannot prove the new lifecycle or new reusable caller.
+3. Confirm the CI-start lifecycle creates `Waiting for CI results` on a **single bot-owned comment**, followed by `Processing CI results` and the completed `Ready` report on **the same comment ID**. Fast CI may skip the intermediate states; the final report is mandatory.
+4. Inspect the post-CI job to verify two distinct validated artifact IDs and downloads under `artifacts/tests` and `artifacts/coverage`. Confirm real test totals and line/function/branch metrics appear, and that exact-current-base `benchmark-lcov` supports a signed coverage delta.
+5. Push a new commit to the test PR and ensure stale CI attempts never overwrite its latest report. Then test a **real fork-originated PR**, verifying source repo ID, branch and head SHA, read-only PR CI and no execution of fork code with comment permissions.
+6. If a pilot fails, roll back only the trusted consumer workflow pin/lifecycle, or revert the separate artifact inputs. Keep read-only PR CI and the combined artifact unchanged until old consumers are retired.
+
+**Unverified at PR creation:** activation of the new default-branch workflows, first live split-artifact selection, rerun/fork conditions, and any GitHub Release tag/download. These need explicit post-merge evidence.

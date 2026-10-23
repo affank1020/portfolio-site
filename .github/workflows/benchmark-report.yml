@@ -16,6 +16,9 @@ permissions:
 jobs:
   report:
     if: github.event.workflow_run.event == 'pull_request'
-    uses: affank1020/benchmark/.github/workflows/reusable-report.yml@bb128d710834af8f763eb116bfd768af9d326d9b
+    uses: affank1020/benchmark/.github/workflows/reusable-report.yml@bff973c94597897c095f76e0538ec145d7ecdc45
     with:
+      # Legacy combined artifact remains until the rollout is accepted.
       artifact_name: benchmark-ci
+      tests_artifact_name: benchmark-junit
+      coverage_artifact_name: benchmark-lcov
