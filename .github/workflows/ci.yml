@@ -34,9 +34,10 @@ jobs:
       - name: Run quality checks
         run: npm run check
 
-      # Preserve JUnit and LCOV from the existing coverage test execution.
-      # Artifacts are uploaded even if lint, typing, or tests fail.
-      - name: Upload Benchmark report inputs
+      # Keep the legacy combined artifact while the default-branch reporter
+      # is still pinned to the older Benchmark release during this PR.
+      # These are uploads of existing results: tests never run twice.
+      - name: Upload legacy Benchmark report inputs
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -44,6 +45,24 @@ jobs:
           path: |
             junit.xml
             lcov.info
+          if-no-files-found: ignore
+
+      # Exercise the new Benchmark independent-artifact resolution in a
+      # separate trusted workflow_run publisher after this PR is merged.
+      - name: Upload Benchmark JUnit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-junit
+          path: junit.xml
+          if-no-files-found: ignore
+
+      - name: Upload Benchmark LCOV results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-lcov
+          path: lcov.info
           if-no-files-found: ignore
 
   build:
