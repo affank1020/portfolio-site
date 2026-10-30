@@ -1,6 +1,7 @@
 "use client";
 
 import type { XmbCategory } from "./types";
+import { releaseXmbFocusAfterPointerClick } from "./xmb-keyboard-focus";
 
 interface XmbHorizontalAxisProps {
   categories: XmbCategory[];
@@ -24,7 +25,10 @@ export function XmbHorizontalAxis({
           <button
             type="button"
             key={category.id}
-            onClick={() => onCategorySelect(index)}
+            onClick={(event) => {
+              onCategorySelect(index);
+              releaseXmbFocusAfterPointerClick(event);
+            }}
             disabled={locked}
             aria-label={`Open ${category.label}`}
             aria-current={active ? "page" : undefined}
