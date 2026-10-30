@@ -2,6 +2,7 @@
 
 import type { XmbItem } from "./types";
 import { XmbItemIcon } from "./xmb-item-icon";
+import { releaseXmbFocusAfterPointerClick } from "./xmb-keyboard-focus";
 
 interface XmbVerticalAxisProps {
   items: XmbItem[];
@@ -143,7 +144,11 @@ export function XmbVerticalAxis({
                     <button
                       type="button"
                       key={item.id}
-                      onClick={() => active ? onItemActivate(index) : onItemSelect(index)}
+                      onClick={(event) => {
+                        if (active) onItemActivate(index);
+                        else onItemSelect(index);
+                        releaseXmbFocusAfterPointerClick(event);
+                      }}
                       aria-current={active ? "true" : undefined}
                       className={`psp-xmb-item pointer-events-auto relative flex w-full cursor-pointer items-center gap-4 rounded-sm py-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] ${group.title ? "pl-5" : ""} ${group.title ? "h-14" : "h-11"} ${
                         active ? "font-semibold text-white" : "text-white/55 hover:text-white"

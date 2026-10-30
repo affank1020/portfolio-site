@@ -18,6 +18,7 @@ import { XmbDetailPanel } from "./xmb-detail-panel";
 import { XmbHomePanel } from "./xmb-home-panel";
 import { PspMobileView } from "./psp-mobile-view";
 import { XmbExpandedDetail } from "./xmb-expanded-detail";
+import { shouldHandleXmbKeyboardEvent } from "./xmb-keyboard-focus";
 import { getPspThemeStyle } from "./psp-showcase-style";
 import type { XmbItem } from "./types";
 import { NEUTRAL_SHOWCASE } from "@/lib/showcase";
@@ -148,24 +149,27 @@ export function PspPortfolioPage({
         return;
       }
 
-      // Let focused controls perform their native action on Enter instead of
-      // accidentally activating the currently selected XMB item.
-      if (event.target instanceof HTMLElement) {
-        if (event.target.closest("a")) return;
-        if (
-          event.key === "Enter" &&
-          event.target.closest('button, input, select, textarea, [role="button"], [role="link"]')
-        ) return;
-      }
+      // Mobile uses native list navigation, not the desktop XMB controller.
+      if (window.matchMedia("(max-width: 1023px)").matches) return;
 
-      // Keep browser shortcuts and Shift+Arrow text selection available.
-      if (event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      const nativeControlFocused = Boolean(target?.closest(
+        'a, input, select, textarea, summary, [contenteditable]:not([contenteditable="false"]), [role="link"], [role="textbox"], [role="combobox"], [role="slider"]'
+      ));
+      const focusedButton = target?.closest<HTMLElement>('button, [role="button"]') ?? null;
 
-      const navKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter"];
-      if (!navKeys.includes(event.key)) return;
+      if (!shouldHandleXmbKeyboardEvent(event, {
+        nativeControlFocused,
+        buttonFocused: Boolean(focusedButton),
+      })) return;
+
       // Home has no vertical menu to move through.
       if (isHome && (event.key === "ArrowUp" || event.key === "ArrowDown")) return;
       event.preventDefault();
+
+      // Arrow navigation switches back to the XMB controller. The previously
+      // focused button must not intercept Enter after the visual selection moves.
+      if (event.key !== "Enter") focusedButton?.blur();
 
       if (event.key === "ArrowLeft") {
         setActiveCategoryIndex((previous) => Math.max(0, previous - 1));
