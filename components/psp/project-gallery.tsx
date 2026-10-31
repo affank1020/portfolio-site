@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { GalleryFrameImage } from "./gallery-frame-image";
 
 interface ProjectGalleryProps {
   images: string[];
@@ -86,28 +87,23 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
         ? "flex min-w-0 items-center justify-center"
         : "relative overflow-hidden rounded-3xl border border-white/10 bg-black/25 shadow-2xl"
       }>
-        {/* The focus gallery follows each image's own aspect ratio: no fixed
-            4:3 canvas, padding, or filled background around smaller images. */}
+        {/* Reserve one frame for every image so load time and dimensions
+            never move the gallery navigation or the surrounding page. */}
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
-          aria-label={`Enlarge image ${activeIndex + 1} of ${images.length}`}
+          aria-label={"Enlarge image " + (activeIndex + 1) + " of " + images.length}
           title="Enlarge image"
           className={focused
-            ? "block max-w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
-            : "block w-full cursor-zoom-in focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
+            ? "relative block aspect-[16/10] w-full max-h-[min(55dvh,34rem)] cursor-zoom-in overflow-hidden rounded-xl border border-white/10 bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
+            : "relative block aspect-video w-full cursor-zoom-in bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
           }
         >
-          {/* Atlas media URLs can vary by deployment, so keep this host-agnostic. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <GalleryFrameImage
             key={activeImage}
             src={activeImage}
-            alt={`${title} project view ${activeIndex + 1}`}
-            className={focused
-              ? "block h-auto w-auto max-h-[min(55dvh,34rem)] max-w-full object-contain"
-              : "aspect-video w-full object-contain"
-            }
+            alt={title + " project view " + (activeIndex + 1)}
+            className="p-2 sm:p-3"
           />
         </button>
 
@@ -169,10 +165,9 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
               onClick={() => setActiveIndex(index)}
               aria-label={`Show image ${index + 1}`}
               aria-current={index === activeIndex}
-              className={`shrink-0 overflow-hidden rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] ${index === activeIndex ? "border-[var(--psp-accent)] opacity-100" : "border-white/10 opacity-45 hover:opacity-75"}`}
+              className={`relative aspect-video w-28 shrink-0 overflow-hidden rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)] sm:w-36 ${index === activeIndex ? "border-[var(--psp-accent)] opacity-100" : "border-white/10 opacity-45 hover:opacity-75"}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="aspect-video w-28 object-cover sm:w-36" />
+              <GalleryFrameImage src={src} alt="" loading="lazy" fit="cover" />
             </button>
           ))}
         </div>
@@ -181,7 +176,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
       {lightboxOpen && typeof document !== "undefined" && createPortal(
         <div ref={lightboxRef} role="dialog" aria-modal="true" aria-label={`${title} enlarged image`} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 px-5 py-14 text-white">
           <button type="button" tabIndex={-1} onClick={() => setLightboxOpen(false)} aria-label="Close enlarged image" className="absolute inset-0 cursor-zoom-out" />
-          <div className="pointer-events-none relative z-10 flex max-h-full w-full flex-col items-center justify-center gap-5">
+          <div className="pointer-events-none relative z-10 flex h-full w-full flex-col items-center justify-center gap-5">
             <button
               type="button"
               ref={closeButtonRef}
@@ -189,12 +184,14 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
               aria-label="Close image viewer"
               className="pointer-events-auto absolute right-0 -top-10 px-2 py-1 text-sm text-white/70 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >Close ×</button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={activeImage}
-              alt={`${title} project view ${activeIndex + 1}`}
-              className="pointer-events-auto block h-auto w-auto max-h-[calc(100dvh-10rem)] max-w-[min(92vw,90rem)] object-contain"
-            />
+            <div className="pointer-events-auto relative min-h-0 w-full max-w-[min(92vw,90rem)] flex-1">
+              <GalleryFrameImage
+                key={activeImage}
+                src={activeImage}
+                alt={title + " project view " + (activeIndex + 1)}
+                className="p-1"
+              />
+            </div>
             {images.length > 1 && (
               <div className="pointer-events-auto flex items-center gap-8 text-sm text-white/75">
                 <button type="button" onClick={() => move(-1)} aria-label="Previous enlarged image" className="px-3 py-1 text-xl hover:text-white focus-visible:outline-2 focus-visible:outline-white">←</button>
