@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
+import { galleryKeyboardDirection, shouldRestoreBackFocusAfterGalleryClick } from "./project-gallery-keyboard";
 import { GalleryFrameImage } from "./gallery-frame-image";
 
 interface ProjectGalleryProps {
@@ -9,9 +10,10 @@ interface ProjectGalleryProps {
   title: string;
   variant?: "default" | "focus";
   pinned?: boolean;
+  onPointerNavigate?: () => void;
 }
 
-export function ProjectGallery({ images, title, variant = "default", pinned = false }: ProjectGalleryProps) {
+export function ProjectGallery({ images, title, variant = "default", pinned = false, onPointerNavigate }: ProjectGalleryProps) {
   const focused = variant === "focus";
   const fixed = focused && pinned;
   const [activeIndex, setActiveIndex] = useState(0);
@@ -23,6 +25,30 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
   const move = useCallback((direction: number) => {
     setActiveIndex((current) => (current + direction + images.length) % images.length);
   }, [images.length]);
+
+  const restoreBackFocusAfterClick = (event: MouseEvent<HTMLButtonElement>) => {
+    if (shouldRestoreBackFocusAfterGalleryClick(event.detail)) onPointerNavigate?.();
+  };
+
+  // The expanded desktop gallery is navigable from anywhere in the project
+  // (including the Back button), not only while a gallery control has focus.
+  useEffect(() => {
+    if (!focused || lightboxOpen || images.length < 2) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      // The mobile project view has a static image list, not this gallery.
+      if (!window.matchMedia("(min-width: 1024px)").matches) return;
+      const target = event.target instanceof Element ? event.target : null;
+      const editableFocused = Boolean(target?.closest(
+        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="slider"], [role="spinbutton"]'
+      ));
+      const direction = galleryKeyboardDirection(event, editableFocused);
+      if (direction === null) return;
+      event.preventDefault();
+      move(direction);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [focused, lightboxOpen, images.length, move]);
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -132,14 +158,14 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
 
       {focused && images.length > 1 && (
         <div className="mt-4 flex items-center justify-center gap-5" role="group" aria-label="Gallery navigation">
-          <button type="button" onClick={() => move(-1)} aria-label="Previous image" className="px-2 py-1 text-xl text-white/50 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--psp-accent)]">←</button>
+          <button type="button" onClick={(event) => { move(-1); restoreBackFocusAfterClick(event); }} aria-label="Previous image" className="px-2 py-1 text-xl text-white/50 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--psp-accent)]">←</button>
           {fixed ? (
             <div className="flex items-center gap-2" role="group" aria-label="Choose gallery image">
               {images.map((src, index) => (
                 <button
                   type="button"
                   key={src + index}
-                  onClick={() => setActiveIndex(index)}
+                  onClick={(event) => { setActiveIndex(index); restoreBackFocusAfterClick(event); }}
                   aria-label={`Show image ${index + 1}`}
                   aria-pressed={index === activeIndex}
                   className={`h-2 w-2 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)] ${index === activeIndex ? "bg-[var(--psp-accent)]" : "bg-white/25 hover:bg-white/55"}`}
@@ -151,7 +177,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
               {String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
             </span>
           )}
-          <button type="button" onClick={() => move(1)} aria-label="Next image" className="px-2 py-1 text-xl text-white/50 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--psp-accent)]">→</button>
+          <button type="button" onClick={(event) => { move(1); restoreBackFocusAfterClick(event); }} aria-label="Next image" className="px-2 py-1 text-xl text-white/50 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--psp-accent)]">→</button>
         </div>
       )}
 
