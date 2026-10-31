@@ -4,6 +4,7 @@ import type { PortfolioContact } from "@/lib/portfolio-types";
 import type { XmbCategory, XmbItem } from "./types";
 import { XmbContactLinks } from "./xmb-header";
 import { MarkdownText } from "./markdown-text";
+import { ExternalLinkArrowIcon } from "./xmb-icons";
 
 interface PspMobileViewProps {
   categories: XmbCategory[];
@@ -122,7 +123,7 @@ export function PspMobileView({
                 className="mt-5 inline-flex min-h-11 items-center gap-2 border-b border-white/30 text-sm font-medium text-white/85 hover:border-white hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)]"
               >
                 {home.activationLabel}
-                <span aria-hidden="true">↗</span>
+                <ExternalLinkArrowIcon className="h-3.5 w-3.5 shrink-0" />
               </a>
             )}
           </section>
