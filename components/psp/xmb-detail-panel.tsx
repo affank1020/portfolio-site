@@ -88,7 +88,7 @@ export function XmbDetailPanel({
           onClick={onClose}
           className="rounded-sm px-2 py-1.5 text-sm normal-case tracking-normal text-white/70 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)]"
         >
-          ← Back <span className="ml-2 text-xs text-white/30">Esc</span>
+          ← Back <span className="ml-2 text-xs text-white/30">Enter / Esc</span>
         </button>
         {writingFocused && (
           <div className="psp-writing-divider" aria-hidden="true">
@@ -278,7 +278,14 @@ export function XmbDetailPanel({
                   exit={{ opacity: 0, transition: { duration: reducedMotion ? 0 : 0.08 } }}
                   transition={{ ...animation, delay: reducedMotion ? 0 : 0.07 }}
                 >
-                  <ProjectGallery key={activeItem.id} images={images} title={activeItem.title} variant="focus" pinned />
+                  <ProjectGallery
+                    key={activeItem.id}
+                    images={images}
+                    title={activeItem.title}
+                    variant="focus"
+                    pinned
+                    onPointerNavigate={() => backRef.current?.focus({ preventScroll: true })}
+                  />
                 </motion.aside>
               )}
             </AnimatePresence>
