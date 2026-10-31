@@ -2,6 +2,7 @@
 
 import type { XmbItem } from "./types";
 import { MarkdownText } from "./markdown-text";
+import { ExternalLinkArrowIcon } from "./xmb-icons";
 
 interface XmbHomePanelProps {
   item: XmbItem;
@@ -27,7 +28,7 @@ export function XmbHomePanel({ item, siteName }: XmbHomePanelProps) {
               className="mt-7 inline-flex items-center gap-2 border-b border-white/35 pb-1 text-sm font-medium text-white/80 transition-colors hover:border-white hover:text-white"
             >
               {item.activationLabel}
-              <span aria-hidden="true">↗</span>
+              <ExternalLinkArrowIcon className="h-3.5 w-3.5 shrink-0" />
             </a>
           )}
         </article>
