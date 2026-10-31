@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { XmbItem } from "./types";
 import { MarkdownText } from "./markdown-text";
 import { ProjectGallery } from "./project-gallery";
+import { GalleryFrameImage } from "./gallery-frame-image";
 
 interface XmbExpandedDetailProps {
   item: XmbItem;
@@ -154,13 +155,12 @@ export function XmbExpandedDetail({
                 {images.length > 0 && (
                   <section className="mt-8 space-y-5 lg:hidden" aria-label="Project images">
                     {images.map((src, index) => (
-                      <figure key={src} className="border border-white/10 bg-white/[0.025]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                      <figure key={src} className="relative aspect-[16/10] overflow-hidden rounded-lg border border-white/10 bg-white/[0.035]">
+                        <GalleryFrameImage
                           src={src}
                           loading="lazy"
                           alt={item.title + " screenshot " + (index + 1)}
-                          className="mx-auto block max-h-[28rem] w-full object-contain"
+                          className="p-2"
                         />
                       </figure>
                     ))}
