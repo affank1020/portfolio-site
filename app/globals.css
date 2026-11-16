@@ -452,14 +452,10 @@ body::selection {
   background: transparent;
 }
 
-.psp-gallery-image-trigger:focus {
+.psp-gallery-image-trigger:focus,
+.psp-gallery-image-trigger:focus-visible {
   outline: none !important;
   box-shadow: none !important;
-}
-
-html[data-focus-navigation="tab"] .psp-gallery-image-trigger:focus-visible {
-  outline: 2px solid var(--psp-accent) !important;
-  outline-offset: 4px;
 }
 
 .psp-gallery-progress {
