@@ -20,6 +20,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const lightboxRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLElement>(null);
   const activeImage = images[activeIndex];
 
   const move = useCallback((direction: number) => {
@@ -51,10 +52,29 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
   }, [focused, lightboxOpen, images.length, move]);
 
   useEffect(() => {
+    if (lightboxOpen || images.length < 2) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      move(event.key === "ArrowLeft" ? -1 : 1);
+    };
+
+    // Capture the keys before the portfolio's global XMB navigation handler.
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [images.length, lightboxOpen, move]);
+
+  useEffect(() => {
     if (!lightboxOpen) return;
 
     const previousOverflow = document.body.style.overflow;
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const galleryElement = galleryRef.current;
     document.body.style.overflow = "hidden";
     closeButtonRef.current?.focus({ preventScroll: true });
 
@@ -94,21 +114,23 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
     return () => {
       document.removeEventListener("keydown", onKeyDown, true);
       document.body.style.overflow = previousOverflow;
-      if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true });
+      if (focused && galleryElement?.isConnected) {
+        galleryElement.focus({ preventScroll: true });
+      } else if (previousFocus?.isConnected) {
+        previousFocus.focus({ preventScroll: true });
+      }
     };
-  }, [lightboxOpen, images.length, move]);
+  }, [focused, lightboxOpen, images.length, move]);
 
   if (!activeImage) return null;
 
   return (
-    <section className={focused ? "w-full min-w-0" : "mt-10"} aria-label={`${title} gallery`}>
-      {focused && (
-        <div className="mb-4 flex items-center justify-between text-xs uppercase tracking-[0.2em] text-white/40">
-          <span>Gallery</span>
-          <span>{String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span>
-        </div>
-      )}
-
+    <section
+      ref={galleryRef}
+      tabIndex={focused ? -1 : undefined}
+      className={focused ? "w-full min-w-0" : "mt-10"}
+      aria-label={`${title} gallery`}
+    >
       <div className={focused
         ? "flex min-w-0 items-center justify-center"
         : "relative overflow-hidden rounded-3xl border border-white/10 bg-black/25 shadow-2xl"
