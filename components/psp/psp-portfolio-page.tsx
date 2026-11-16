@@ -144,6 +144,12 @@ export function PspPortfolioPage({
         if (event.key === "Escape") {
           event.preventDefault();
           closeExpandedItem();
+        } else if (
+          event.key === "Enter" &&
+          !(event.target instanceof HTMLElement && event.target.closest('[role="dialog"], button, a, input, select, textarea, [role="button"], [role="link"]'))
+        ) {
+          event.preventDefault();
+          closeExpandedItem();
         }
         return;
       }
