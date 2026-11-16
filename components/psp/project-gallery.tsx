@@ -60,13 +60,11 @@ export function ProjectGallery({ images, title, variant = "default", onPointerNa
     if (!lightboxOpen) restoreBackFocusAfterClick(event);
   };
 
-  // The expanded desktop gallery is navigable from anywhere in the project
-  // (including the Back button), not only while a gallery control has focus.
+  // The focused gallery owns vertical arrows before the portfolio controller
+  // sees them, regardless of which project control currently has focus.
   useEffect(() => {
     if (!focused || lightboxOpen || images.length < 2) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      // The mobile project view has a static image list, not this gallery.
-      if (!window.matchMedia("(min-width: 1024px)").matches) return;
       const target = event.target instanceof Element ? event.target : null;
       const editableFocused = Boolean(target?.closest(
         'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="slider"], [role="spinbutton"]'
@@ -74,10 +72,11 @@ export function ProjectGallery({ images, title, variant = "default", onPointerNa
       const direction = galleryKeyboardDirection(event, editableFocused);
       if (direction === null) return;
       event.preventDefault();
+      event.stopPropagation();
       move(direction);
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [focused, lightboxOpen, images.length, move]);
 
   useEffect(() => {
