@@ -65,6 +65,9 @@ export function ProjectGallery({ images, title, variant = "default", onPointerNa
   useEffect(() => {
     if (!focused || lightboxOpen || images.length < 2) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      // The mobile detail component remains mounted inside a display:none
+      // wrapper on desktop. It must not consume keys before the visible gallery.
+      if (!galleryRef.current?.getClientRects().length) return;
       const target = event.target instanceof Element ? event.target : null;
       const editableFocused = Boolean(target?.closest(
         'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="slider"], [role="spinbutton"]'
