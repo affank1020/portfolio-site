@@ -143,7 +143,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
           aria-label={"Enlarge image " + (activeIndex + 1) + " of " + images.length}
           title="Enlarge image"
           className={focused
-            ? "relative block aspect-[16/10] w-full max-h-[min(55dvh,34rem)] cursor-zoom-in overflow-hidden rounded-xl border border-white/10 bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
+            ? "relative block h-[min(55dvh,34rem)] w-full cursor-zoom-in overflow-hidden rounded-xl border border-white/10 bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
             : "relative block aspect-video w-full cursor-zoom-in bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
           }
         >

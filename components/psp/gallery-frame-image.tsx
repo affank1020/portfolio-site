@@ -38,8 +38,8 @@ export function GalleryFrameImage({
   return (
     <>
       {phase === "loading" && (
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 animate-pulse bg-white/[0.055] motion-reduce:animate-none">
-          <span className="absolute inset-[12%] rounded-md bg-white/[0.035]" />
+        <span aria-hidden="true" className="pointer-events-none absolute inset-0 animate-pulse bg-white/[0.08] motion-reduce:animate-none">
+          <span className="absolute inset-[12%] rounded-md bg-gradient-to-br from-white/[0.13] via-white/[0.04] to-white/[0.1]" />
         </span>
       )}
       {phase === "error" && (
