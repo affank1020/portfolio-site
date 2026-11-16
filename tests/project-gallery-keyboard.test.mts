@@ -18,10 +18,11 @@ function key(keyName: string, overrides: Record<string, unknown> = {}) {
   };
 }
 
-test("left and right move the focused project gallery", () => {
-  assert.equal(galleryKeyboardDirection(key("ArrowLeft"), false), -1);
-  assert.equal(galleryKeyboardDirection(key("ArrowRight"), false), 1);
-  assert.equal(galleryKeyboardDirection(key("ArrowUp"), false), null);
+test("up and down move the focused project gallery", () => {
+  assert.equal(galleryKeyboardDirection(key("ArrowUp"), false), -1);
+  assert.equal(galleryKeyboardDirection(key("ArrowDown"), false), 1);
+  assert.equal(galleryKeyboardDirection(key("ArrowLeft"), false), null);
+  assert.equal(galleryKeyboardDirection(key("ArrowRight"), false), null);
   assert.equal(galleryKeyboardDirection(key("Enter"), false), null);
 });
 

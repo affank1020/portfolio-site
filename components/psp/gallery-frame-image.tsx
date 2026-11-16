@@ -1,6 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const imageAspectRatios = new Map<string, number>();
+let lastKnownAspectRatio: number | null = null;
 
 interface GalleryFrameImageProps {
   src: string;
@@ -25,23 +28,60 @@ export function GalleryFrameImage({
   const [imageState, setImageState] = useState<{
     src: string;
     phase: "loading" | "loaded" | "error";
-  }>({ src, phase: "loading" });
+    aspectRatio: number | null;
+  }>({ src, phase: "loading", aspectRatio: null });
+  const [frameSize, setFrameSize] = useState({ width: 0, height: 0 });
+  const frameRef = useRef<HTMLSpanElement>(null);
   const phase = imageState.src === src ? imageState.phase : "loading";
+  const aspectRatio = imageState.src === src
+    ? imageState.aspectRatio ?? imageAspectRatios.get(src) ?? lastKnownAspectRatio
+    : imageAspectRatios.get(src) ?? lastKnownAspectRatio;
+
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setFrameSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
+
+  const skeletonSize = aspectRatio && frameSize.width > 0 && frameSize.height > 0
+    ? aspectRatio >= frameSize.width / frameSize.height
+      ? { width: frameSize.width, height: frameSize.width / aspectRatio }
+      : { width: frameSize.height * aspectRatio, height: frameSize.height }
+    : undefined;
+
+  const recordLoadedImage = useCallback((image: HTMLImageElement) => {
+    const ratio = image.naturalWidth > 0 && image.naturalHeight > 0
+      ? image.naturalWidth / image.naturalHeight
+      : null;
+    if (ratio) {
+      imageAspectRatios.set(src, ratio);
+      lastKnownAspectRatio = ratio;
+    }
+    setImageState({ src, phase: "loaded", aspectRatio: ratio });
+  }, [src]);
 
   // Cached images may already be complete before React delivers onLoad.
   const imageRef = useCallback((image: HTMLImageElement | null) => {
     if (image?.complete) {
-      setImageState({ src, phase: image.naturalWidth > 0 ? "loaded" : "error" });
+      if (image.naturalWidth > 0) recordLoadedImage(image);
+      else setImageState({ src, phase: "error", aspectRatio: null });
     }
-  }, [src]);
+  }, [recordLoadedImage, src]);
 
   return (
     <>
-      {phase === "loading" && (
-        <span aria-hidden="true" className="pointer-events-none absolute inset-0 animate-pulse bg-white/[0.08] motion-reduce:animate-none">
-          <span className="absolute inset-[12%] rounded-md bg-gradient-to-br from-white/[0.13] via-white/[0.04] to-white/[0.1]" />
-        </span>
-      )}
+      <span ref={frameRef} aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        {phase === "loading" && (
+          <span
+            className="animate-pulse rounded-md bg-gradient-to-br from-white/[0.13] via-white/[0.04] to-white/[0.1] motion-reduce:animate-none"
+            style={skeletonSize ?? { width: "100%", height: "100%" }}
+          />
+        )}
+      </span>
       {phase === "error" && (
         <span role="status" className="pointer-events-none absolute inset-0 grid place-items-center text-xs text-white/45">
           Image unavailable
@@ -55,8 +95,8 @@ export function GalleryFrameImage({
         alt={alt}
         loading={loading}
         decoding="async"
-        onLoad={() => setImageState({ src, phase: "loaded" })}
-        onError={() => setImageState({ src, phase: "error" })}
+        onLoad={(event) => recordLoadedImage(event.currentTarget)}
+        onError={() => setImageState({ src, phase: "error", aspectRatio: null })}
         className={[
           "pointer-events-none absolute inset-0 h-full w-full transition-opacity duration-200 motion-reduce:transition-none",
           fit === "cover" ? "object-cover" : "object-contain",
