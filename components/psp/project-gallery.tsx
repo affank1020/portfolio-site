@@ -176,7 +176,7 @@ export function ProjectGallery({ images, title, variant = "default", onPointerNa
           aria-label={"Enlarge image " + (activeIndex + 1) + " of " + images.length}
           title="Enlarge image"
           className={focused
-            ? "psp-gallery-image-trigger focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
+            ? "psp-gallery-image-trigger select-none"
             : "relative block aspect-video w-full cursor-zoom-in bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
           }
         >
