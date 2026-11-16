@@ -128,22 +128,20 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
     <section
       ref={galleryRef}
       tabIndex={focused ? -1 : undefined}
-      className={focused ? "w-full min-w-0" : "mt-10"}
+      className={focused ? "psp-gallery--focus w-full min-w-0" : "mt-10"}
       aria-label={`${title} gallery`}
     >
       <div className={focused
-        ? "flex min-w-0 items-center justify-center"
+        ? "psp-gallery-stage"
         : "relative overflow-hidden rounded-3xl border border-white/10 bg-black/25 shadow-2xl"
       }>
-        {/* Reserve one frame for every image so load time and dimensions
-            never move the gallery navigation or the surrounding page. */}
         <button
           type="button"
           onClick={() => setLightboxOpen(true)}
           aria-label={"Enlarge image " + (activeIndex + 1) + " of " + images.length}
           title="Enlarge image"
           className={focused
-            ? "relative block h-[min(55dvh,34rem)] w-full cursor-zoom-in overflow-hidden rounded-xl border border-white/10 bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
+            ? "psp-gallery-image-trigger focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
             : "relative block aspect-video w-full cursor-zoom-in bg-white/[0.035] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)]"
           }
         >
@@ -151,7 +149,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
             key={activeImage}
             src={activeImage}
             alt={title + " project view " + (activeIndex + 1)}
-            className="p-2 sm:p-3"
+            className={focused ? "" : "p-2 sm:p-3"}
           />
         </button>
 
@@ -179,7 +177,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
       </div>
 
       {focused && images.length > 1 && (
-        <div className="mt-4 flex items-center justify-center gap-5" role="group" aria-label="Gallery navigation">
+        <div className="psp-gallery-controls flex items-center justify-center gap-5" role="group" aria-label="Gallery navigation">
           <button type="button" onClick={(event) => { move(-1); restoreBackFocusAfterClick(event); }} aria-label="Previous image" className="px-2 py-1 text-xl text-white/50 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--psp-accent)]">←</button>
           {fixed ? (
             <div className="flex items-center gap-2" role="group" aria-label="Choose gallery image">
