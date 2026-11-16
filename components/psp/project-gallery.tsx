@@ -13,9 +13,34 @@ interface ProjectGalleryProps {
   onPointerNavigate?: () => void;
 }
 
-export function ProjectGallery({ images, title, variant = "default", pinned = false, onPointerNavigate }: ProjectGalleryProps) {
+interface GalleryProgressProps {
+  images: string[];
+  activeIndex: number;
+  onSelect: (index: number, event: MouseEvent<HTMLButtonElement>) => void;
+  overlay?: boolean;
+}
+
+function GalleryProgress({ images, activeIndex, onSelect, overlay = false }: GalleryProgressProps) {
+  return (
+    <div className={`psp-gallery-progress ${overlay ? "psp-gallery-progress--overlay" : ""}`} role="group" aria-label="Choose gallery image">
+      {images.map((src, index) => (
+        <button
+          type="button"
+          key={src + index}
+          onClick={(event) => onSelect(index, event)}
+          aria-label={`Show image ${index + 1} of ${images.length}`}
+          aria-current={index === activeIndex ? "step" : undefined}
+          aria-pressed={index === activeIndex}
+          className={`psp-gallery-progress__step ${index === activeIndex ? "psp-gallery-progress__step--active" : ""}`}
+        />
+      ))}
+      <span className="sr-only" aria-live="polite">Image {activeIndex + 1} of {images.length}</span>
+    </div>
+  );
+}
+
+export function ProjectGallery({ images, title, variant = "default", onPointerNavigate }: ProjectGalleryProps) {
   const focused = variant === "focus";
-  const fixed = focused && pinned;
   const [activeIndex, setActiveIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -29,6 +54,10 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
 
   const restoreBackFocusAfterClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (shouldRestoreBackFocusAfterGalleryClick(event.detail)) onPointerNavigate?.();
+  };
+  const selectImage = (index: number, event: MouseEvent<HTMLButtonElement>) => {
+    setActiveIndex(index);
+    if (!lightboxOpen) restoreBackFocusAfterClick(event);
   };
 
   // The expanded desktop gallery is navigable from anywhere in the project
@@ -52,22 +81,26 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
   }, [focused, lightboxOpen, images.length, move]);
 
   useEffect(() => {
-    if (lightboxOpen || images.length < 2) return;
+    if (lightboxOpen || focused || images.length < 2) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-      if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target || !galleryRef.current?.contains(target)) return;
+      const editableFocused = Boolean(target.closest(
+        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="slider"], [role="spinbutton"]'
+      ));
+      const direction = galleryKeyboardDirection(event, editableFocused);
+      if (direction === null) return;
 
       event.preventDefault();
       event.stopPropagation();
-      move(event.key === "ArrowLeft" ? -1 : 1);
+      move(direction);
     };
 
-    // Capture the keys before the portfolio's global XMB navigation handler.
+    // Keep page scrolling available unless a regular gallery control is focused.
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [images.length, lightboxOpen, move]);
+  }, [focused, images.length, lightboxOpen, move]);
 
   useEffect(() => {
     if (!lightboxOpen) return;
@@ -89,8 +122,8 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
         // No keyboard navigation should leak through to the XMB behind the dialog.
         event.preventDefault();
         event.stopPropagation();
-        if (images.length > 1 && (event.key === "ArrowLeft" || event.key === "ArrowRight")) {
-          move(event.key === "ArrowLeft" ? -1 : 1);
+        if (images.length > 1 && (event.key === "ArrowUp" || event.key === "ArrowDown")) {
+          move(event.key === "ArrowUp" ? -1 : 1);
         }
       } else if (event.key === "Tab") {
         const buttons = Array.from(lightboxRef.current?.querySelectorAll<HTMLButtonElement>("button:not([disabled]):not([tabindex=\"-1\"])") ?? []);
@@ -153,53 +186,15 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
           />
         </button>
 
-        {!focused && images.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={() => move(-1)}
-              aria-label="Previous image"
-              className="absolute left-4 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/45 text-xl text-white/80 backdrop-blur-md transition hover:border-white/35 hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)]"
-            >←</button>
-            <button
-              type="button"
-              onClick={() => move(1)}
-              aria-label="Next image"
-              className="absolute right-4 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-black/45 text-xl text-white/80 backdrop-blur-md transition hover:border-white/35 hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--psp-accent)]"
-            >→</button>
-          </>
-        )}
-        {!focused && (
-          <div className="absolute bottom-4 right-4 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 font-mono text-[10px] tracking-[0.2em] text-white/65 backdrop-blur-md">
-            {String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
-          </div>
+        {images.length > 1 && (
+          <GalleryProgress
+            images={images}
+            activeIndex={activeIndex}
+            onSelect={selectImage}
+            overlay={!focused}
+          />
         )}
       </div>
-
-      {focused && images.length > 1 && (
-        <div className="psp-gallery-controls flex items-center justify-center gap-5" role="group" aria-label="Gallery navigation">
-          <button type="button" onClick={(event) => { move(-1); restoreBackFocusAfterClick(event); }} aria-label="Previous image" className="px-2 py-1 text-xl text-white/50 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--psp-accent)]">←</button>
-          {fixed ? (
-            <div className="flex items-center gap-2" role="group" aria-label="Choose gallery image">
-              {images.map((src, index) => (
-                <button
-                  type="button"
-                  key={src + index}
-                  onClick={(event) => { setActiveIndex(index); restoreBackFocusAfterClick(event); }}
-                  aria-label={`Show image ${index + 1}`}
-                  aria-pressed={index === activeIndex}
-                  className={`h-2 w-2 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--psp-accent)] ${index === activeIndex ? "bg-[var(--psp-accent)]" : "bg-white/25 hover:bg-white/55"}`}
-                />
-              ))}
-            </div>
-          ) : (
-            <span className="font-mono text-xs tracking-widest text-white/40">
-              {String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
-            </span>
-          )}
-          <button type="button" onClick={(event) => { move(1); restoreBackFocusAfterClick(event); }} aria-label="Next image" className="px-2 py-1 text-xl text-white/50 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--psp-accent)]">→</button>
-        </div>
-      )}
 
       {images.length > 1 && !focused && (
         <div className="mt-3 flex gap-3 overflow-x-auto pb-2" role="list" aria-label="Choose gallery image">
@@ -222,7 +217,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
       {lightboxOpen && typeof document !== "undefined" && createPortal(
         <div ref={lightboxRef} role="dialog" aria-modal="true" aria-label={`${title} enlarged image`} className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 px-5 py-14 text-white">
           <button type="button" tabIndex={-1} onClick={() => setLightboxOpen(false)} aria-label="Close enlarged image" className="absolute inset-0 cursor-zoom-out" />
-          <div className="pointer-events-none relative z-10 flex h-full w-full flex-col items-center justify-center gap-5">
+          <div className="pointer-events-none relative z-10 flex h-full w-full items-center justify-center gap-5">
             <button
               type="button"
               ref={closeButtonRef}
@@ -239,11 +234,7 @@ export function ProjectGallery({ images, title, variant = "default", pinned = fa
               />
             </div>
             {images.length > 1 && (
-              <div className="pointer-events-auto flex items-center gap-8 text-sm text-white/75">
-                <button type="button" onClick={() => move(-1)} aria-label="Previous enlarged image" className="px-3 py-1 text-xl hover:text-white focus-visible:outline-2 focus-visible:outline-white">←</button>
-                <span className="font-mono text-xs tracking-[0.2em] text-white/55">{String(activeIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}</span>
-                <button type="button" onClick={() => move(1)} aria-label="Next enlarged image" className="px-3 py-1 text-xl hover:text-white focus-visible:outline-2 focus-visible:outline-white">→</button>
-              </div>
+              <GalleryProgress images={images} activeIndex={activeIndex} onSelect={selectImage} />
             )}
           </div>
         </div>,
